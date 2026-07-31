@@ -5,6 +5,7 @@ import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { SkillRecommendations } from '@/components/dashboard/SkillRecommendations';
 import { AcademicCalendar } from '@/components/dashboard/AcademicCalendar';
 import { Announcements } from '@/components/dashboard/Announcements';
+import { loadDashboard } from "../controllers/DashboardController";
 
 // Mock data for the dashboard. Will be replaced with real API data once the
 // backend is connected.
