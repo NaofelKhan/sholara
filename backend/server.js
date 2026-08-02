@@ -7,6 +7,8 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const skillRoutes = require("./routes/skillRoutes");
+const requestRoutes = require("./routes/requestRoutes");
 
 dotenv.config();
 
@@ -23,6 +25,8 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
+app.use("/api/skills", skillRoutes);
+app.use("/api/requests", requestRoutes);
 
 app.get("/", (req, res) => {
     res.send("Scholara Backend Running");

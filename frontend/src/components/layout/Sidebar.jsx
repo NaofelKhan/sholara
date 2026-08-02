@@ -1,10 +1,11 @@
+import { Link, useLocation } from "wouter";
 const DUMMY_AVATAR =
   'https://media.istockphoto.com/id/1288129985/tr/vekt%C3%B6r/bir-ki%C5%9Finin-yer-tutucunun-eksik-g%C3%B6r%C3%BCnt%C3%BCs%C3%BC.jpg';
 
-function SidebarItem({ icon, text, active }) {
+function SidebarItem({ icon, text, href, active }) {
   return (
+  <Link href={href}>
     <a
-      href="#"
       data-testid={`link-nav-${text.toLowerCase().replace(/\s+/g, '-')}`}
       className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
         active
@@ -14,11 +15,13 @@ function SidebarItem({ icon, text, active }) {
     >
       <span className="material-symbols-outlined text-[22px]">{icon}</span>
       {text}
-    </a>
+      </a>
+</Link>
   );
 }
 
 export function Sidebar({ profile }) {
+  const [location] = useLocation();
   return (
     <aside className="h-screen w-64 fixed left-0 top-0 bg-[#faf8ff] border-r border-[#c4c6cf] flex flex-col py-6 px-4 z-50">
       <div className="mb-10 px-2">
@@ -45,11 +48,37 @@ export function Sidebar({ profile }) {
       </div>
 
       <nav className="flex-grow space-y-2">
-        <SidebarItem icon="dashboard" text="Dashboard" active />
-        <SidebarItem icon="school" text="Academic Hub" />
-        <SidebarItem icon="handshake" text="Skill Exchange" />
-        <SidebarItem icon="calendar_today" text="Calendar" />
-        <SidebarItem icon="groups" text="Community" />
+        <SidebarItem
+          icon="dashboard"
+          text="Dashboard"
+          href="/dashboard"
+          active={location === "/dashboard"}
+        />
+
+        <SidebarItem
+          icon="school"
+          text="Academic Hub"  //change when page added
+          href="/academic-hub"
+        />
+
+        <SidebarItem
+          icon="handshake"
+          text="Skill Exchange"
+          href="/skill-exchange"
+          active={location === "/skill-exchange"}
+        />
+
+        <SidebarItem
+          icon="calendar_today"
+          text="Calendar"
+          href="/calendar"
+        />
+
+        <SidebarItem
+          icon="groups"
+          text="Community"
+          href="/community"
+        />
       </nav>
 
       <div className="border-t border-[#c4c6cf] pt-4">

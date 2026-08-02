@@ -1,0 +1,30 @@
+// Material You color palette — matches the Scholara Stitch design exactly
+const C = {
+  surface:                 '#faf8ff',
+  surfaceContainerLowest:  '#ffffff',
+  surfaceContainerLow:     '#f2f3ff',
+  surfaceContainer:        '#eaedff',
+  surfaceContainerHigh:    '#e2e7ff',
+  surfaceContainerHighest: '#dae2fd',
+  onSurface:               '#131b2e',
+  onSurfaceVariant:        '#43474e',
+  primary:                 '#002045',
+  onPrimary:               '#ffffff',
+  primaryContainer:        '#1a365d',
+  onPrimaryContainer:      '#86a0cd',
+  primaryFixed:            '#d6e3ff',
+  primaryFixedDim:         '#adc7f7',
+  secondary:               '#006b5f',
+  onSecondary:             '#ffffff',
+  secondaryContainer:      '#62fae3',
+  onSecondaryContainer:    '#007165',
+  tertiary:                '#311c00',
+  onTertiaryContainer:     '#dd8d00',
+  tertiaryFixed:           '#ffddb8',
+  outline:                 '#74777f',
+  outlineVariant:          '#c4c6cf',
+  error:                   '#ba1a1a',
+  background:              '#faf8ff',
+};
+
+export default C;

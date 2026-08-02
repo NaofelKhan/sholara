@@ -1,48 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');  
 
-:root {
-  --background: #f9f9fc;
-  --panel: #faf9fd;
-  --field: #f1f3f7;
-  --foreground: #252d43;
-  --muted: #697187;
-  --border: #e1e4eb;
-
-  --brand: #27304b;
-  --brand-light: #4b6275;
-  --brand-foreground: #fafbff;
-  --brand-muted: #bdc6d3;
-
-  --focus: rgba(39,48,75,.25);
-}
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
-
-html,
-body,
-#root{
-  width:100%;
-  min-height:100%;
-}
-
-body{
-  background:var(--background);
-  color:var(--foreground);
-  font-family:"Plus Jakarta Sans",sans-serif;
-}
-
-button,
-input{
-  font:inherit;
-}
-
-button{
-  cursor:pointer;
-}
 
 .page{
    
@@ -338,12 +294,25 @@ button{
 }
 
 .remember-row{
-  display:flex;
-  align-items:flex-start;
-  gap:12px;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
   margin-top:24px;
   font-size:14px;
-  line-height:1.6;
+  cursor:pointer;
+}
+
+.remember-checkbox{
+  width:16px;
+  height:16px;
+  margin:0;
+  flex-shrink:0;
+  accent-color:#27304b;
+  cursor:pointer;
+}
+
+.remember-text{
+  line-height:1.4;
 }
 
 .login-button{

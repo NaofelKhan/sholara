@@ -465,17 +465,18 @@ if (!form.fullName ||
 <label className="remember-row">
 
   <input
+    className="remember-checkbox"
     type="checkbox"
     checked={agree}
     onChange={() => setAgree(!agree)}
   />
 
-<span>
-  I agree to the
-  <a href="#"> Terms of Service </a>
-  and
-  <a href="#"> Privacy Policy</a>
-</span>
+  <span className="remember-text">
+    I agree to the{" "}
+    <a href="#">Terms of Service</a>{" "}
+    and{" "}
+    <a href="#">Privacy Policy</a>
+  </span>
 
 </label>
 

@@ -246,7 +246,7 @@ const Auth = () => {
           onChange={() => setRemember(!remember)}
         />
 
-        <span>
+        <span className="remember-text">
           Keep me signed in on this device
         </span>
 

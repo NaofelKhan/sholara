@@ -19,6 +19,14 @@ export default defineConfig({
     host: "localhost",
     port: 5173,
     open: true,
+    // Forward API requests to your backend server
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000", // Change 5000 to your backend server's port if different
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 
   build: {

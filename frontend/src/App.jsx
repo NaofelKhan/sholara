@@ -2,10 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
-import Dashboard from '@/views/Dashboard';
+import Dashboard from './pages/Dashboard';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import Auth from "@/pages/Auth";
 import Signup from "./pages/Signup";
+import SkillExchange from "./pages/SkillExchange";
 
 const queryClient = new QueryClient();
 
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={Auth} />
       <Route path="/signup" component={Signup} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/skill-exchange" component={SkillExchange} />
       <Route component={NotFound} />
     </Switch>
   );
