@@ -2,15 +2,36 @@ const dns = require("dns");
 
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
+const dotenv = require("dotenv");
+
+// Load .env FIRST
+dotenv.config();
+
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
+
 const connectDB = require("./config/db");
+const cloudinary = require("./config/cloudinary");
+
 const authRoutes = require("./routes/authRoutes");
 const skillRoutes = require("./routes/skillRoutes");
 const requestRoutes = require("./routes/requestRoutes");
 
-dotenv.config();
+
+
+console.log("Cloudinary SDK Config:");
+console.log(cloudinary.config());
+
+(async () => {
+    try {
+        const result = await cloudinary.api.ping();
+        console.log("✅ Cloudinary Connected");
+        console.log(result);
+    } catch (err) {
+        console.log("❌ Cloudinary Connection Failed");
+        console.log(err);
+    }
+})();
 
 connectDB();
 
@@ -22,14 +43,26 @@ app.use(
         credentials: true,
     })
 );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use("/api/auth", authRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/requests", requestRoutes);
 
 app.get("/", (req, res) => {
     res.send("Scholara Backend Running");
+});
+
+app.use((err, req, res, next) => {
+    console.error("GLOBAL ERROR:");
+    console.error(err);
+
+    res.status(err.status || 500).json({
+        message: err.message,
+        stack: err.stack,
+    });
 });
 
 const PORT = process.env.PORT || 5000;

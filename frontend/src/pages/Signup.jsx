@@ -25,6 +25,8 @@ const [form, setForm] = useState({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [agree, setAgree] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [registeredName, setRegisteredName] = useState("");
 
   const handleChange = (e) => {
     setForm({
@@ -40,11 +42,15 @@ const [form, setForm] = useState({
 
 
 
-if (!form.fullName ||
+if (
+    !form.fullName ||
     !form.email ||
+    !form.university ||
+    !form.department ||
+    !form.studentId ||
     !form.password ||
-    !form.confirmPassword) {
-
+    !form.confirmPassword
+) {
     setError("Please complete all required fields.");
     return;
 }
@@ -65,9 +71,18 @@ if (!form.fullName ||
     try {
       setLoading(true);
 
-      await register(form);
+      await register({
+      fullName: form.fullName,
+      email: form.email,
+      role: form.role,
+      university: form.university,
+      department: form.department,
+      studentId: form.studentId,
+      password: form.password,
+    });
 
-      navigate("/");
+      setRegisteredName(form.fullName);
+      setShowSuccessModal(true);
     } catch (err) {
       setError(
         err?.response?.data?.message ||
@@ -546,6 +561,48 @@ if (!form.fullName ||
         </footer>
 
       </div>
+
+{showSuccessModal && (
+  <div className="modal-overlay">
+    <div className="success-modal">
+
+      <div className="success-icon">🎓</div>
+
+      <h2>Account Created Successfully</h2>
+
+      <p>
+        <strong>Congratulations, {registeredName}!</strong>
+      </p>
+
+      <p>
+        Your Scholara account has been created successfully.
+      </p>
+
+      <p>
+        You can now log in and begin your academic journey.
+      </p>
+
+      <div className="modal-buttons">
+
+        <button
+          className="login-btn"
+          onClick={() => navigate("/")}
+        >
+          Log In
+        </button>
+
+        <button
+          className="cancel-btn"
+          onClick={() => setShowSuccessModal(false)}
+        >
+          Cancel
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+)}
 
     </>
   );

@@ -1,10 +1,8 @@
 export function getDashboardData() {
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+
   return {
-    profile: {
-      name: 'Alex Rivera',
-      firstName: 'Alex',
-      role: 'Computer Science, Junior',
-    },
+    profile: {},
 
     academic: {
       semester: 'Fall 2024',

@@ -622,3 +622,69 @@ gap:12px;
     font-style:italic;
     font-size:15px;
 }
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.25);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.success-modal {
+    width: 380px;
+    background: #e1edfa;
+    border: 1px solid #c8defc;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 12px 35px rgba(0,32,69,.15);
+}
+
+.success-icon {
+    width: 60px;
+    height: 60px;
+    margin: auto;
+    margin-bottom: 15px;
+    border-radius: 50%;
+    background: #d8eaff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+}
+
+.success-modal h2{
+    color:#002045;
+}
+
+.success-modal p{
+    color:#4b5563;
+}
+
+.modal-buttons{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    margin-top:20px;
+}
+
+.login-btn{
+    background:#04265d;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.cancel-btn{
+    background:white;
+    color:#002045;
+    border:1px solid #bfd9ff;
+    padding:10px 18px;
+    border-radius:10px;
+    cursor:pointer;
+}

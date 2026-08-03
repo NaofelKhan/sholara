@@ -37,3 +37,25 @@ export const getMe = async () => {
 
     return data;
 };
+
+// UPDATE PROFILE PICTURE
+export const updateProfilePicture = async (file) => {
+
+    const formData = new FormData();
+
+    formData.append("profilePicture", file);
+
+
+    const { data } = await api.put(
+        "/auth/profile-picture",
+        formData,
+        {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        }
+    );
+
+
+    return data;
+};

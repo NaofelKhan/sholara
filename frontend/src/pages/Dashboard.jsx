@@ -6,11 +6,12 @@ import { SkillRecommendations } from '@/components/dashboard/SkillRecommendation
 import { AcademicCalendar } from '@/components/dashboard/AcademicCalendar';
 import { Announcements } from '@/components/dashboard/Announcements';
 import { loadDashboard } from "../controllers/DashboardController";
+import { useAuth } from "../context/AuthContext";
+
 
 // Mock data for the dashboard. Will be replaced with real API data once the
 // backend is connected.
 const {
-  profile,
   academic,
   todayFocus,
   tasks,
@@ -20,7 +21,18 @@ const {
   announcements,
 } = loadDashboard();
 
+
+
 export default function Dashboard() {
+const { user } = useAuth();
+
+const profile = {
+  fullName: user?.fullName,
+  firstName: user?.fullName?.split(" ")[0],
+  profilePicture: user?.profilePicture,
+  department: user?.department,
+  role: user?.role,
+};  
   return (
     <DashboardLayout profile={profile}>
       <div className="p-8 bg-[#faf8ff] min-h-screen">

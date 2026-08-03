@@ -1,12 +1,13 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from "react";
 import {
-    login as loginApi,
-    signup as signupApi,
-    getMe,
-    setAuthToken,
+  login as loginApi,
+  signup as signupApi,
+  getMe,
+  setAuthToken,
 } from "../api/auth";
 
 const AuthContext = createContext(null);
+
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
@@ -14,18 +15,74 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('scholara_token');
-    if (!stored) { setLoading(false); return; }
-    setAuthToken(stored);
-    getMe().then(setUser).catch(() => { localStorage.removeItem('scholara_token'); setAuthToken(null); }).finally(() => setLoading(false));
+    const token = localStorage.getItem("scholara_token");
+
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    setAuthToken(token);
+
+    getMe()
+      .then((data) => {
+        setUser(data);
+      })
+      .catch(() => {
+        localStorage.removeItem("scholara_token");
+        setAuthToken(null);
+        setUser(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
-  const login = async (email, password) => { const data = await loginApi(email, password); localStorage.setItem('scholara_token', data.token); setAuthToken(data.token); setUser(data); return data; };
-  const signup = async (name, email, password) => { const data = await signupApi(name, email, password); localStorage.setItem('scholara_token', data.token); setAuthToken(data.token); setUser(data); return data; };
+  // Login
+  const login = async (email, password) => {
+    const data = await loginApi(email, password);
+
+    localStorage.setItem("scholara_token", data.token);
+
+    setAuthToken(data.token);
+
+    setUser(data);
+
+    return data;
+  };
+
+  // Register (Sign Up)
+  const register = async (formData) => {
+    const data = await signupApi(formData);
+
+    localStorage.setItem("scholara_token", data.token);
+
+    setAuthToken(data.token);
+
+    setUser(data);
+
+    return data;
+  };
+
+  // Logout
   const logout = () => {
     localStorage.removeItem("scholara_token");
     setAuthToken(null);
     setUser(null);
   };
-  return <AuthContext.Provider value={{ user, loading, login, signup, logout }}>{children}</AuthContext.Provider>;
+
+return (
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        loading,
+        login,
+        register,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
