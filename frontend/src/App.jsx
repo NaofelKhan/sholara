@@ -7,6 +7,7 @@ import { Route, Switch, Router as WouterRouter } from 'wouter';
 import Auth from "@/pages/Auth";
 import Signup from "./pages/Signup";
 import SkillExchange from "./pages/SkillExchange";
+import OfferSkill from "./pages/OfferSkill";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/skill-exchange" component={SkillExchange} />
+      <Route path="/offer-skill" component={OfferSkill} />
       <Route component={NotFound} />
     </Switch>
   );
