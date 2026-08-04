@@ -59,3 +59,5 @@ export const updateProfilePicture = async (file) => {
 
     return data;
 };
+
+export default api;

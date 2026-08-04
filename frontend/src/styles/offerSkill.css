@@ -522,59 +522,47 @@ line-height:1.5;
 
 
 
+/* Toast */
 
-
-/* Toast - only OfferSkill */
-
-.offer-toast-container {
-
-position:fixed;
-
-bottom:24px;
-
-right:24px;
-
-z-index:9999;
-
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
 }
 
-
-.offer-toast {
-
-padding:12px 20px;
-
-border-radius:10px;
-
-font-size:13px;
-
-font-weight:500;
-
-display:flex;
-
-gap:8px;
-
-align-items:center;
-
-box-shadow:0 4px 24px rgba(0,0,0,.15);
-
+.toast {
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  box-shadow: 0 4px 24px rgba(0,0,0,.15);
+  animation: toastIn .3s ease;
 }
 
-
-.offer-toast.success {
-
-background:#1e293b;
-
-color:white;
-
+.toast-success {
+  background: #1e293b;
+  color: white;
 }
 
+.toast-error {
+  background: #ef4444;
+  color: white;
+}
 
-.offer-toast.error {
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
 
-background:#ef4444;
-
-color:white;
-
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
@@ -635,73 +623,101 @@ padding:16px;
   display:block;
 }
 
-.preview-card-placeholder{
-  width:100%;
-  height:185px;
-  background:#1e293b;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.preview-card-body{
+  padding:18px;
 }
 
-.preview-card-body{
-  padding:16px;
+/* Top row */
+
+.preview-header-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:24px;
 }
 
 .preview-author{
   display:flex;
-  align-items:center;
-  gap:6px;
+  align-items:flex-start;
+  gap:12px;
   margin-bottom:10px;
 }
 
 .preview-avatar{
-  width:24px;
-  height:24px;
+  width:42px;
+  height:42px;
   border-radius:50%;
   object-fit:cover;
-  flex-shrink:0;
+}
+
+.preview-author-info{
+  flex:1;
+  display:flex;
+  flex-direction:column;
 }
 
 .preview-author-name{
-  font-size:13px;
-  color:#374151;
+  font-size:15px;
+  font-weight:500;
+  color:#162233;
+  line-height:1.2;
+  margin-bottom:2px;
 }
 
-.preview-role,
-.preview-rating,
-.preview-dot{
+.preview-role{
   font-size:13px;
-  color:#374151;
+  font-weight:700;
+  color:#6f6d89;
+  line-height:1.2;
 }
+
+.preview-rating{
+  font-size:18px;
+  font-weight:700;
+  color:#3d2867;
+
+  display:flex;
+  align-items:center;
+  gap:4px;
+
+  margin-left:auto;
+  margin-top:2px;
+}
+
+/* Title */
 
 .preview-skill-title{
-  font-size:22px;
+  font-size:18px;
   font-weight:700;
-  color:#111827;
-  line-height:1.3;
+  color:#2c323f;
+  line-height:1.25;
+
+  margin-top:13px;
   margin-bottom:8px;
 }
 
+/* Description */
+
 .preview-desc{
-  font-size:14px;
-  line-height:1.6;
+  font-size:13px;
+  line-height:1.65;
   color:#64748b;
-  margin-bottom:16px;
+
+  margin-bottom:18px;
 }
+/* Bottom */
 
 .preview-meta{
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
   border-top:1px solid #e5e7eb;
-  padding-top:14px;
+  padding-top:16px;
 }
 
 .preview-meta-left{
   display:flex;
-  align-items:flex-start;
-  gap:18px;
+  gap:20px;
 }
 
 .preview-divider{
@@ -717,10 +733,11 @@ padding:16px;
 
 .preview-meta-item label,
 .preview-investment label{
-  font-size:10px;
+  font-size:11px;
   color:#94a3b8;
   margin-bottom:4px;
-  text-transform:none;
+  text-transform:uppercase;
+  letter-spacing:.05em;
 }
 
 .preview-meta-item span{
@@ -736,7 +753,7 @@ padding:16px;
 }
 
 .preview-investment span{
-  font-size:15px;
+  font-size:16px;
   font-weight:700;
   color:#22c55e;
 }

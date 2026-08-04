@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
+import SkillDetailsModal from "../components/SkillDetailsModal";
 
 import HeroBanner from "../components/HeroBanner";
 import CategoryFilters from "../components/CategoryFilters";
@@ -23,7 +24,7 @@ export default function SkillExchange() {
 
   const [activeCategory, setActiveCategory] = useState("All Skills");
   const [activeTab, setActiveTab] = useState("Skill Requests");
-
+  const [selectedSkill, setSelectedSkill] = useState(null);
   const { skills, loading, error } = useSkills(activeCategory);
 
   return (
@@ -55,10 +56,13 @@ export default function SkillExchange() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-16">
               {(Array.isArray(skills) ? skills : []).map((skill) => (
-                <SkillCard
-                  key={skill._id}
-                  skill={skill}
-                />
+            <div
+              key={skill._id}
+              onClick={() => setSelectedSkill(skill)}
+              className="cursor-pointer"
+            >
+              <SkillCard skill={skill} />
+            </div>
               ))}
 
               {(!skills || skills.length === 0) && (
@@ -75,6 +79,10 @@ export default function SkillExchange() {
           )}
 
           <ActiveRequests />
+          <SkillDetailsModal
+            skill={selectedSkill}
+            onClose={() => setSelectedSkill(null)}
+          />         
         </div>
       </main>
     </DashboardLayout>

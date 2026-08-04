@@ -1,16 +1,19 @@
 import React from "react";
 
 export default function MarketplacePreview({ formData, user }) {
-  const investment =
-    formData.pricingModel === "Paid Service"
-      ? `৳${formData.price || 0}${
+const investment =
+  formData.pricingModel === "Paid Service"
+    ? formData.price
+      ? `৳${formData.price}${
           formData.frequency
             ? `/${formData.frequency.replace("Per ", "").toLowerCase()}`
             : ""
         }`
-      : "FREE";
+      : "Enter price"
+    : "FREE";
 
-  const investmentClass = investment === "FREE" ? "free" : "";
+const investmentClass =
+  investment === "FREE" ? "free" : "";
 
   return (
     <div className="preview-sticky">
@@ -36,7 +39,7 @@ export default function MarketplacePreview({ formData, user }) {
             />
           ) : (
             <img
-              src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900"
+              src="https://images.ctfassets.net/zykafdb0ssf5/68qzkHjCboFfCsSxV2v9S6/4da75033db02c1339de2a3effb461f7a/missing.png"
               alt="Workspace"
               className="preview-card-img"
             />
@@ -44,44 +47,51 @@ export default function MarketplacePreview({ formData, user }) {
         </div>
 
         <div className="preview-card-body">
-          {/* Author */}
-          <div className="preview-author">
-            <img
-              src={
-                user?.profilePicture ||
-                "https://randomuser.me/api/portraits/men/32.jpg"
-              }
-              alt="Profile"
-              className="preview-avatar"
-            />
+      {/* Header */}
 
-            <span className="preview-author-name">
-              {user?.fullName || "Alex Rivera"}
-            </span>
 
-            <span className="preview-dot">•</span>
+      {/* Author */}
+      <div className="preview-author">
 
-            <span className="preview-role">
-              {formData.mentorRole}
-            </span>
+        <img
+          src={
+            user?.profilePicture ||
+            "https://randomuser.me/api/portraits/men/32.jpg"
+          }
+          alt="Profile"
+          className="preview-avatar"
+        />
 
-            <span className="preview-dot">•</span>
+        <div className="preview-author-info">
 
-            <span className="preview-rating">
-              4.9 ★
-            </span>
-          </div>
+          <span className="preview-author-name">
+            {user?.fullName || ""}
+          </span>
 
-          {/* Title */}
-          <div className="preview-skill-title">
-            {formData.title || "Skill Title"}
-          </div>
+          <span className="preview-role">
+            {formData.mentorTitle} • {formData.mentorRole}
+          </span>
 
-          {/* Description */}
-          <div className="preview-desc">
-            {formData.description ||
-              "Add a description to see it here…"}
-          </div>
+        </div>
+
+        <span className="preview-rating">
+          ★ 4.9
+        </span>
+
+      </div>
+     
+    
+
+    {/* Title */}
+    <div className="preview-skill-title">
+      {formData.title || "Skill Title"}
+    </div>
+
+    {/* Description */}
+    <div className="preview-desc">
+      {formData.description ||
+        "Add a description to see it here…"}
+    </div>
 
           {/* Bottom Info */}
           <div className="preview-meta">
@@ -102,7 +112,7 @@ export default function MarketplacePreview({ formData, user }) {
                 <label>Duration</label>
 
                 <span>
-                  {formData.estimatedDuration || 60}m
+                  {formData.estimatedDuration}
                 </span>
               </div>
             </div>

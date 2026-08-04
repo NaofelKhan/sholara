@@ -5,7 +5,7 @@ const CATEGORIES = ["Design", "Development", "Marketing", "Business", "Music", "
 const DIFFICULTY_LEVELS = ["Beginner", "Intermediate", "Advanced"];
 const DELIVERY_METHODS = ["Online (Video Call)", "In-Person", "Hybrid"];
 const FREQUENCIES = ["Per Hour", "Per Session", "Per Month"];
-const ROLES = ["Junior", "Senior", "Expert"];
+const ROLES = ["Mentor", "Junior", "Senior", "Expert"];
 
 export default function SkillForm({ formData, onChange, onDayToggle, onImageChange }) {
   const fileInputRef = useRef();
@@ -73,16 +73,36 @@ export default function SkillForm({ formData, onChange, onDayToggle, onImageChan
           />
         </div>
 
+        {/* Mentor Title */}
+        <div className="form-group">
+          <label className="form-label">Mentor Title</label>
+
+          <input
+            type="text"
+            className="form-control"
+            placeholder="e.g. Product Designer, TEDx Speaker"
+            value={formData.mentorTitle}
+            onChange={(e) => onChange("mentorTitle", e.target.value)}
+          />
+        </div>
+
+
         {/* Mentor Role */}
         <div className="form-group">
           <label className="form-label">Mentor Role</label>
-          <select
-            className="form-control"
-            value={formData.mentorRole}
-            onChange={(e) => onChange("mentorRole", e.target.value)}
-          >
-            {ROLES.map((r) => <option key={r}>{r}</option>)}
-          </select>
+        <select
+          className="form-control"
+          value={formData.mentorRole}
+          onChange={(e) => onChange("mentorRole", e.target.value)}
+        >
+          <option value="">Select Mentor Role</option>
+
+          {ROLES.map((r) => (
+            <option key={r} value={r}>
+              {r}
+            </option>
+          ))}
+        </select>
         </div>
 
         {/* Category + Difficulty */}
@@ -94,7 +114,13 @@ export default function SkillForm({ formData, onChange, onDayToggle, onImageChan
               value={formData.category}
               onChange={(e) => onChange("category", e.target.value)}
             >
-              {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+              <option value="">Select Category</option>
+
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
             </select>
           </div>
           <div className="form-group">
@@ -141,11 +167,11 @@ export default function SkillForm({ formData, onChange, onDayToggle, onImageChan
             <input
               type="radio"
               name="pricingModel"
-              value="Free (Reciprocal)"
-              checked={formData.pricingModel === "Free (Reciprocal)"}
+              value="Free"
+              checked={formData.pricingModel === "Free"}
               onChange={(e) => onChange("pricingModel", e.target.value)}
             />
-            Free (Reciprocal)
+            Free 
           </label>
           <label className="radio-label">
             <input
@@ -169,7 +195,7 @@ export default function SkillForm({ formData, onChange, onDayToggle, onImageChan
                 className="form-control"
                 placeholder="500"
                 value={formData.price}
-                disabled={formData.pricingModel === "Free (Reciprocal)"}
+                disabled={formData.pricingModel === "Free"}
                 onChange={(e) => onChange("price", e.target.value)}
                 min="0"
               />
@@ -180,10 +206,16 @@ export default function SkillForm({ formData, onChange, onDayToggle, onImageChan
             <select
               className="form-control"
               value={formData.frequency}
-              disabled={formData.pricingModel === "Free (Reciprocal)"}
+              disabled={formData.pricingModel === "Free"}
               onChange={(e) => onChange("frequency", e.target.value)}
             >
-              {FREQUENCIES.map((f) => <option key={f}>{f}</option>)}
+              <option value="">Select Frequency</option>
+
+                {FREQUENCIES.map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
@@ -226,7 +258,13 @@ export default function SkillForm({ formData, onChange, onDayToggle, onImageChan
               value={formData.deliveryMethod}
               onChange={(e) => onChange("deliveryMethod", e.target.value)}
             >
-              {DELIVERY_METHODS.map((m) => <option key={m}>{m}</option>)}
+              <option value="">Select Delivery Method</option>
+
+                {DELIVERY_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
             </select>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { useLocation } from "wouter";
+import { createMarketplaceSkill } from "../api/marketplaceSkill";
 import { useAuth } from "../context/AuthContext";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import SkillForm from "../components/offerSkill/SkillForm";
@@ -7,25 +8,27 @@ import MarketplacePreview from "../components/offerSkill/MarketplacePreview";
 import OfferToast from "../components/offerSkill/OfferToast";
 import "../styles/offerSkill.css";
 
+
 const defaultFormData = {
-  title: "Advanced UX Design Systems",
+  title: "",
   coverImage: null,
   coverImagePreview: null,
-  mentorRole: "Junior",
-  category: "Design",
-  difficultyLevel: "Beginner",
-  description:
-    "Learn how to build scalable design systems using Figma and modern UI principles. We will cover tokens, component libraries, and documentation handoff for developers.",
-  pricingModel: "Free (Reciprocal)",
+  mentorTitle: "",
+  mentorRole: "",
+  category: "",
+  difficultyLevel: "",
+  description: "",
+  pricingModel: "",
   price: "",
-  frequency: "Per Hour",
-  estimatedDuration: "60",
-  deliveryMethod: "Online (Video Call)",
-  availabilityDays: ["Mon", "Wed", "Fri", "Sat"],
+  frequency: "",
+  estimatedDuration: "",
+  deliveryMethod: "",
+  availabilityDays: [],
   availabilityNotes: "",
 };
 
 export default function OfferSkill() {
+  const [, navigate] = useLocation();
   const { user } = useAuth();
 
   const profile = {
@@ -81,6 +84,7 @@ export default function OfferSkill() {
     const payload = new FormData();
 
     payload.append("title", formData.title);
+    payload.append("mentorTitle", formData.mentorTitle);
     payload.append("mentorRole", formData.mentorRole);
     payload.append("category", formData.category);
     payload.append("difficultyLevel", formData.difficultyLevel);
@@ -88,7 +92,7 @@ export default function OfferSkill() {
     payload.append("pricingModel", formData.pricingModel);
     payload.append("price", formData.price || 0);
     payload.append("frequency", formData.frequency);
-    payload.append("estimatedDuration", formData.estimatedDuration || 60);
+    payload.append("estimatedDuration", formData.estimatedDuration);
     payload.append("deliveryMethod", formData.deliveryMethod);
     payload.append(
       "availabilityDays",
@@ -104,43 +108,135 @@ export default function OfferSkill() {
     return payload;
   };
 
-  const handleSubmit = async (status) => {
-    if (!formData.title.trim()) {
-      showToast("Please enter a skill title.", "error");
-      return;
+const handleSubmit = async (status) => {
+
+  // Required fields for publishing only
+  if (status === "published") {
+
+    const requiredFields = [
+      {
+        key: "title",
+        message: "Please enter a skill title."
+      },
+      {
+        key: "mentorTitle",
+        message: "Please enter your expertise title."
+      },
+      {
+        key: "mentorRole",
+        message: "Please enter your mentor role."
+      },
+      {
+        key: "category",
+        message: "Please select a category."
+      },
+      {
+        key: "difficultyLevel",
+        message: "Please select difficulty level."
+      },
+      {
+        key: "description",
+        message: "Please enter a description."
+      },
+      {
+        key: "pricingModel",
+        message: "Please select pricing model."
+      },
+      {
+        key: "estimatedDuration",
+        message: "Please enter estimated duration."
+      },
+      {
+        key: "deliveryMethod",
+        message: "Please select delivery method."
+      },
+    ];
+
+
+    for (const field of requiredFields) {
+
+      if (!formData[field.key] || !String(formData[field.key]).trim()) {
+
+        showToast(field.message, "error");
+        return;
+
+      }
+
     }
 
-    if (!formData.description.trim()) {
-      showToast("Please enter a description.", "error");
-      return;
-    }
 
-    setLoading(true);
-
-    try {
-      const payload = buildFormPayload(status);
-
-      await axios.post("/api/skills", payload, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    // Check availability days separately because it is an array
+    if (formData.availabilityDays.length === 0) {
 
       showToast(
-        status === "published"
-          ? "Skill published successfully!"
-          : "Skill saved as draft.",
-        "success"
-      );
-    } catch (err) {
-      showToast(
-        err?.response?.data?.message || "Something went wrong.",
+        "Please select at least one available day.",
         "error"
       );
-    } finally {
-      setLoading(false);
+
+      return;
     }
-  };
+
+
+    // Paid service needs price
+    if (
+      formData.pricingModel === "Paid Service" &&
+      !formData.price
+    ) {
+
+      showToast(
+        "Please enter the service price.",
+        "error"
+      );
+
+      return;
+    }
+
+  }
+
+
+  setLoading(true);
+
+  try {
+
+    const payload = buildFormPayload(status);
+
+    await createMarketplaceSkill(payload);
+
+
+    if (status === "published") {
+
+    showToast(
+    "Skill published successfully!",
+    "success"
+    );
+
+    setTimeout(() => {
+    navigate("/skill-exchange");
+    }, 2000);
+
+    } else {
+
+      showToast(
+        "Skill saved as draft.",
+        "success"
+      );
+
+    }
+
+
+  } catch (err) {
+
+    showToast(
+      err?.response?.data?.message || "Something went wrong.",
+      "error"
+    );
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
 
   return (
 <DashboardLayout profile={profile}>
