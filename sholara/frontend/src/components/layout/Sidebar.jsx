@@ -161,9 +161,7 @@ export function Sidebar({ profile }) {
           icon="campaign"
           text="Notice Board"
           href="/notice-board"
-          active={
-            location === "/notice-board" || location === "/academic-hub"
-          }
+          active={location === "/notice-board"}
         />
 
         <SidebarItem
