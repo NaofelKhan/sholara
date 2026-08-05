@@ -17,8 +17,6 @@ const authRoutes = require("./routes/authRoutes");
 const skillRoutes = require("./routes/skillRoutes");
 const requestRoutes = require("./routes/requestRoutes");
 const marketplaceSkillRoutes = require("./routes/marketplaceSkillRoutes");
-const bookingRoutes = require("./routes/bookingRoutes");
-const noticeRoutes = require("./routes/noticeRoutes");
 
 
 
@@ -54,8 +52,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/marketplace-skills", marketplaceSkillRoutes);
-app.use("/api/bookings", bookingRoutes);
-app.use("/api/notices", noticeRoutes);
 
 app.get("/", (req, res) => {
     res.send("Scholara Backend Running");

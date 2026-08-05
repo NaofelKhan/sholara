@@ -4,6 +4,8 @@ const cloudinary = require("../config/cloudinary");
 
 // Register User
 const registerUser = async (req, res) => {
+    console.log("REGISTER REQUEST RECEIVED");
+    console.log(req.body);
     try {
         const {
             fullName,
@@ -150,13 +152,14 @@ const updateProfilePicture = async (req, res) => {
             profilePicture: updatedUser.profilePicture,
         });
 
-    } catch (error) {
-        console.error(error);
+} catch (error) {
+    console.error(error);
 
-        res.status(500).json({
-            message: error.message,
-        });
-    }
+    return res.status(500).json({
+        message: error.message,
+        stack: error.stack,
+    });
+}
 };
 
 module.exports = {
