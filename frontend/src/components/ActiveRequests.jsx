@@ -2,7 +2,11 @@ import MI from './MI';
 import C from '../constants/colors';
 import useRequests from '../hooks/useRequests';
 
+import { useState } from "react";
+
 export default function ActiveRequests() {
+
+const [selectedRequest, setSelectedRequest] = useState(null);
   const { requests, loading } = useRequests();
 
   if (loading) {
@@ -61,24 +65,114 @@ export default function ActiveRequests() {
                 </p>
                 <p className="font-bold" style={{ color: C.secondary }}>{req.budget}</p>
               </div>
-              <button
-                className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
-                style={{ border: `1px solid ${C.primary}`, color: C.primary, background: 'transparent' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = C.primary;
-                  e.currentTarget.style.color = C.onPrimary;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = C.primary;
-                }}
-              >
-                {req.btnLabel}
-              </button>
+<button
+  className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
+  style={{
+    border:`1px solid ${C.primary}`,
+    color:C.primary,
+    background:"transparent"
+  }}
+  onClick={() => setSelectedRequest(req)}
+>
+  {req.btnLabel}
+</button>
             </div>
           </div>
         ))}
       </div>
+      {selectedRequest && (
+<div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+
+<div
+className="rounded-xl p-6 w-[500px]"
+style={{
+background:C.surface
+}}
+>
+
+<h2 className="text-xl font-bold mb-4">
+{selectedRequest.skillTitle || selectedRequest.title}
+</h2>
+
+
+<p>
+<strong>Learning Objectives:</strong><br/>
+{selectedRequest.learningObjectives || "No learning objectives provided"}
+</p>
+
+
+<p className="mt-3">
+<strong>Category:</strong>{" "}
+{selectedRequest.skillCategory || "Not specified"}
+</p>
+
+
+<p>
+<strong>Difficulty:</strong>{" "}
+{selectedRequest.difficultyLevel || "Not specified"}
+</p>
+
+
+<p>
+<strong>Availability:</strong>{" "}
+{selectedRequest.availability?.join(", ") || "Not specified"}
+</p>
+
+
+<p>
+<strong>Schedule:</strong>{" "}
+{selectedRequest.scheduleNotes}
+</p>
+
+
+<p>
+<strong>Budget:</strong>{" "}
+৳{selectedRequest.estimatedBudget || 0}
+</p>
+
+
+<p>
+<strong>Frequency:</strong>{" "}
+{selectedRequest.frequency}
+</p>
+
+
+<p>
+<strong>Duration:</strong>{" "}
+{selectedRequest.estimatedDuration}
+</p>
+
+
+<div className="flex justify-end gap-3 mt-6">
+
+<button
+className="px-4 py-2 rounded-lg"
+onClick={() => setSelectedRequest(null)}
+>
+Cancel
+</button>
+
+
+<button
+className="px-4 py-2 rounded-lg"
+style={{
+background:C.primary,
+color:C.onPrimary
+}}
+onClick={()=>{
+console.log("Accepted",selectedRequest._id);
+}}
+>
+Accept Request
+</button>
+
+</div>
+
+
+</div>
+
+</div>
+)}
     </section>
   );
 }

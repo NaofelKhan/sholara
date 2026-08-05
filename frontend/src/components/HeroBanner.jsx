@@ -45,6 +45,7 @@ export default function HeroBanner() {
           </button>
 
           <button
+            onClick={() => navigate("/request-skill")}
             className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold shadow-lg transition-transform hover:scale-105"
             style={{
               background: C.surfaceContainerLowest,

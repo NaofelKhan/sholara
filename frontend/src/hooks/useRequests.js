@@ -2,32 +2,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import C from "../constants/colors";
 
-const FALLBACK_REQUESTS = [
-  {
-    _id: "react",
-    icon: "code",
-    iconBg: C.primaryFixedDim,
-    iconColor: C.primary,
-    title: "Looking for: React.js Fundamentals",
-    poster: "Jordan K.",
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    budget: "৳ 2,000",
-    btnLabel: "Help Jordan",
-  },
-  {
-    _id: "mandarin",
-    icon: "translate",
-    iconBg: C.tertiaryFixed,
-    iconColor: C.tertiary,
-    title: "Looking for: Conversational Mandarin",
-    poster: "Wei L.",
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    budget: "Skill Swap",
-    btnLabel: "Help Wei",
-  },
-];
-
 function timeAgo(iso) {
+  if (!iso) return "";
+
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
 
   if (diff < 60) return `${diff}s ago`;
@@ -38,28 +15,49 @@ function timeAgo(iso) {
 }
 
 export default function useRequests() {
-  const [requests, setRequests] = useState(FALLBACK_REQUESTS);
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios
-      .get("/api/requests")
+      .get("/api/skill-requests")
       .then((res) => {
         console.log("Requests API:", res.data);
 
         const data = res.data.data || res.data;
 
         if (Array.isArray(data) && data.length > 0) {
-          // MongoDB has requests
-          setRequests(data);
+          const formattedRequests = data.map((req) => ({
+            ...req,
+
+            // Keep the same card appearance
+            icon: "code",
+            iconBg: C.primaryFixedDim,
+            iconColor: C.primary,
+
+            title: `Looking for: ${req.skillTitle}`,
+
+            // Full name from MongoDB
+            poster: req.userId?.fullName || "Unknown User",
+
+            budget: req.estimatedBudget
+              ? `৳ ${req.estimatedBudget}`
+              : "Skill Swap",
+
+            btnLabel: "Help",
+          }));
+
+          setRequests(formattedRequests);
         } else {
-          // MongoDB empty -> keep dummy requests
-          setRequests(FALLBACK_REQUESTS);
+          // No requests in database
+          setRequests([]);
         }
       })
-      .catch(() => {
-        // Backend unavailable -> keep dummy requests
-        setRequests(FALLBACK_REQUESTS);
+      .catch((err) => {
+        console.error(err);
+
+        // API unavailable
+        setRequests([]);
       })
       .finally(() => {
         setLoading(false);
