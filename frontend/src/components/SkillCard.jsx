@@ -1,7 +1,7 @@
 import MI from "./MI";
 import C from "../constants/colors";
 
-export default function SkillCard({ skill }) {
+export default function SkillCard({ skill, onBook }) {
   // Support both old template data and new MongoDB data
   const title = skill.title;
 
@@ -145,6 +145,7 @@ const price = isPaid
           </div>
 
           <button
+        
             className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
             style={{
               background: C.primaryFixed,
@@ -157,6 +158,10 @@ const price = isPaid
             onMouseLeave={(e) => {
               e.currentTarget.style.background = C.primaryFixed;
               e.currentTarget.style.color = C.primaryContainer;
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onBook?.(skill);
             }}
           >
             Book Now

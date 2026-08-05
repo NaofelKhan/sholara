@@ -145,10 +145,25 @@ export function Sidebar({ profile }) {
         />
 
         <SidebarItem
+          icon="event"
+          text="My Sessions"
+          href="/my-sessions"
+          active={location === "/my-sessions"}
+        />
+
+        <SidebarItem
           icon="calendar_today"
           text="Calendar"
           href="/calendar"
           active={location === "/calendar"}
+        />
+        <SidebarItem
+          icon="campaign"
+          text="Notice Board"
+          href="/notice-board"
+          active={
+            location === "/notice-board" || location === "/academic-hub"
+          }
         />
 
         <SidebarItem
