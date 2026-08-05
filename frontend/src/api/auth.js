@@ -60,4 +60,9 @@ export const updateProfilePicture = async (file) => {
     return data;
 };
 
+export const search = async (query) => {
+    const { data } = await api.get(`/search?q=${query}`);
+    return data;
+};
+
 export default api;

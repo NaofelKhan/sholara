@@ -18,7 +18,7 @@ const skillRoutes = require("./routes/skillRoutes");
 const requestRoutes = require("./routes/requestRoutes");
 const marketplaceSkillRoutes = require("./routes/marketplaceSkillRoutes");
 const skillRequestRoutes = require("./routes/skillRequestRoutes");
-
+const searchRoutes = require("./routes/searchRoutes");
 
 console.log("Cloudinary SDK Config:");
 console.log(cloudinary.config());
@@ -53,6 +53,7 @@ app.use("/api/skills", skillRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/marketplace-skills", marketplaceSkillRoutes);
 app.use("/api/skill-requests", skillRequestRoutes);
+app.use("/api/search", searchRoutes);
 
 app.get("/", (req, res) => {
     res.send("Scholara Backend Running");
