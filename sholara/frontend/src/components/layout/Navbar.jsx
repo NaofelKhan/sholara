@@ -1,3 +1,5 @@
+import { Link } from "wouter";
+
 export function Navbar() {
   return (
     <header className="flex justify-between items-center w-full px-8 py-3 h-16 bg-white border-b border-[#c4c6cf] sticky top-0 z-40">
@@ -15,9 +17,9 @@ export function Navbar() {
         </div>
 
         <nav className="hidden lg:flex gap-6">
-          <a href="#" data-testid="link-my-courses" className="text-sm font-medium text-[#43474e] hover:text-[#002045]">
+          <Link href="/courses" data-testid="link-my-courses" className="text-sm font-medium text-[#43474e] hover:text-[#002045]">
             My Courses
-          </a>
+          </Link>
           <a href="#" data-testid="link-skill-requests" className="text-sm font-medium text-[#43474e] hover:text-[#002045]">
             Skill Requests
           </a>

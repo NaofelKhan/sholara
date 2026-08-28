@@ -12,6 +12,10 @@ import MySessions from "./pages/MySessions";
 import NoticeBoard from "./pages/NoticeBoard";
 import Calendar from "./pages/Calendar";
 import RequestSkillPage from "./pages/RequestSkillPage";
+import CourseList from "./pages/CourseList";
+import CourseWorkspace from "./pages/CourseWorkspace";
+import StudyGroupList from "./pages/StudyGroupList";
+import StudyGroupWorkspace from "./pages/StudyGroupWorkspace";
 
 const queryClient = new QueryClient();
 
@@ -21,13 +25,18 @@ function Router() {
       <Route path="/" component={Auth} />
       <Route path="/signup" component={Signup} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/courses" component={CourseList} />
+      <Route path="/courses/:id" component={CourseWorkspace} />
+      <Route path="/study-groups" component={StudyGroupList} />
+      <Route path="/study-groups/:id" component={StudyGroupWorkspace} />
+      <Route path="/community" component={StudyGroupList} />
       <Route path="/skill-exchange" component={SkillExchange} />
       <Route path="/offer-skill" component={OfferSkill} />
       <Route path="/request-skill" component={RequestSkillPage} />
       <Route path="/my-sessions" component={MySessions} />
       <Route path="/calendar" component={Calendar} />
       <Route path="/notice-board" component={NoticeBoard} />
-      <Route path="/academic-hub" component={NoticeBoard} />
+      <Route path="/academic-hub" component={CourseList} />
       <Route component={NotFound} />
     </Switch>
   );

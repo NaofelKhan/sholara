@@ -19,9 +19,8 @@ const requestRoutes = require("./routes/requestRoutes");
 const marketplaceSkillRoutes = require("./routes/marketplaceSkillRoutes");
 // 1. Import the route at the top
 const appointmentRoutes = require("./routes/appointmentRoutes");
-
-
-
+const courseRoutes = require("./routes/courseRoutes");
+const studyGroupRoutes = require("./routes/studyGroupRoutes");
 
 console.log("Cloudinary SDK Config:");
 console.log(cloudinary.config());
@@ -57,6 +56,8 @@ app.use("/api/requests", requestRoutes);
 app.use("/api/marketplace-skills", marketplaceSkillRoutes);
 // 2. Mount the route under app.use()
 app.use("/api/appointments", appointmentRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/study-groups", studyGroupRoutes);
 
 
 app.get("/", (req, res) => {

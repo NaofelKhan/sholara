@@ -132,9 +132,9 @@ export function Sidebar({ profile }) {
 
         <SidebarItem
           icon="school"
-          text="Academic Hub"
-          href="/academic-hub"
-          active={location === "/academic-hub"}
+          text="Course Workspaces"
+          href="/courses"
+          active={location.startsWith("/courses") || location === "/academic-hub"}
         />
 
         <SidebarItem
@@ -161,16 +161,14 @@ export function Sidebar({ profile }) {
           icon="campaign"
           text="Notice Board"
           href="/notice-board"
-          active={
-            location === "/notice-board" || location === "/academic-hub"
-          }
+          active={location === "/notice-board"}
         />
 
         <SidebarItem
           icon="groups"
-          text="Community"
-          href="/community"
-          active={location === "/community"}
+          text="Study Groups"
+          href="/study-groups"
+          active={location.startsWith("/study-groups") || location === "/community"}
         />
       </nav>
 
