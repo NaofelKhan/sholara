@@ -196,6 +196,22 @@ export function Sidebar({ profile }) {
           />
 
           <SidebarItem
+            icon="chat"
+            text="Direct Messages"
+            href="/messages"
+            active={location.startsWith("/messages") || location.startsWith("/direct-messages")}
+            onClick={() => setIsOpen(false)}
+          />
+
+          <SidebarItem
+            icon="workspace_premium"
+            text="Certificates"
+            href="/certificates"
+            active={location === "/certificates"}
+            onClick={() => setIsOpen(false)}
+          />
+
+          <SidebarItem
             icon="calendar_today"
             text="Calendar"
             href="/calendar"

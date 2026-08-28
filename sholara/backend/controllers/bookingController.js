@@ -1,5 +1,6 @@
 const Booking = require("../models/Booking");
 const MarketplaceSkill = require("../models/MarketplaceSkill");
+const { notifyUser } = require("../utils/notificationService");
 
 // POST /api/bookings
 const createBooking = async (req, res) => {
@@ -94,6 +95,21 @@ const createBooking = async (req, res) => {
         "skill",
         "title coverImage category estimatedDuration pricingModel price"
       );
+
+    // Notify mentor of new session booking request
+    try {
+      await notifyUser({
+        recipient: skill.mentor._id,
+        sender: req.user._id,
+        type: "skill_exchange",
+        title: "New Session Booking Request",
+        message: `${req.user.fullName} requested a "${skill.title}" session on ${scheduledDate.toLocaleDateString()}.`,
+        link: "/my-sessions",
+        metadata: { bookingId: booking._id },
+      });
+    } catch (notifErr) {
+      console.error("Booking notification error:", notifErr);
+    }
 
     res.status(201).json({
       success: true,
@@ -236,6 +252,21 @@ const confirmBooking = async (req, res) => {
         "skill",
         "title coverImage category estimatedDuration pricingModel price"
       );
+
+    // Notify student that booking was confirmed
+    try {
+      await notifyUser({
+        recipient: booking.student,
+        sender: req.user._id,
+        type: "skill_exchange",
+        title: "Session Confirmed",
+        message: `Your skill exchange session for "${populated.skill?.title || "Skill Session"}" was confirmed.`,
+        link: "/my-sessions",
+        metadata: { bookingId: booking._id },
+      });
+    } catch (notifErr) {
+      console.error("Confirm notification error:", notifErr);
+    }
 
     res.json({
       success: true,
@@ -426,6 +457,21 @@ const completeBooking = async (req, res) => {
         "skill",
         "title coverImage category estimatedDuration pricingModel price"
       );
+
+    // Notify student that session completed, certificate is available, and they can rate partner
+    try {
+      await notifyUser({
+        recipient: booking.student,
+        sender: req.user._id,
+        type: "skill_exchange",
+        title: "Session Completed - Certificate Available",
+        message: `Your session for "${populated.skill?.title || "Skill Exchange"}" is marked complete. You can now view your Certificate and rate your partner.`,
+        link: "/my-sessions",
+        metadata: { bookingId: booking._id },
+      });
+    } catch (notifErr) {
+      console.error("Complete notification error:", notifErr);
+    }
 
     res.json({
       success: true,

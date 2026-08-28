@@ -25,6 +25,10 @@ const departmentChannelRoutes = require("./routes/departmentChannelRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const skillRequestRoutes = require("./routes/skillRequestRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const certificateRoutes = require("./routes/certificateRoutes");
+const directMessageRoutes = require("./routes/directMessageRoutes");
 
 console.log("Cloudinary SDK Config:");
 console.log(cloudinary.config());
@@ -66,6 +70,10 @@ app.use("/api/department-channels", departmentChannelRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/skill-requests", skillRequestRoutes);
 app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/certificates", certificateRoutes);
+app.use("/api/messages", directMessageRoutes);
 
 
 app.get("/", (req, res) => {

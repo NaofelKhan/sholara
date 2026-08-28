@@ -5,6 +5,7 @@ const CourseDiscussion = require("../models/CourseDiscussion");
 const CourseAttendance = require("../models/CourseAttendance");
 const CourseAnnouncement = require("../models/CourseAnnouncement");
 const User = require("../models/User");
+const { notifyUser, notifyMultipleUsers } = require("../utils/notificationService");
 
 // Generate unique join code
 const generateJoinCode = () => {
@@ -273,6 +274,24 @@ exports.createAssignment = async (req, res) => {
       "fullName profilePicture"
     );
 
+    // Notify all enrolled students
+    try {
+      const course = await Course.findById(req.params.id);
+      if (course && course.enrolledStudents?.length > 0) {
+        await notifyMultipleUsers({
+          recipients: course.enrolledStudents,
+          sender: req.user._id,
+          type: "assignment",
+          title: `New Assignment: ${title}`,
+          message: `New assignment "${title}" was posted in ${course.code || course.title}. Due date: ${new Date(dueDate).toLocaleDateString()}.`,
+          link: `/courses/${course._id}`,
+          metadata: { courseId: course._id, assignmentId: assignment._id },
+        });
+      }
+    } catch (notifErr) {
+      console.error("Failed to send assignment notifications:", notifErr);
+    }
+
     res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ message: "Failed to create assignment", error: error.message });
@@ -345,6 +364,21 @@ exports.gradeSubmission = async (req, res) => {
     const updated = await CourseAssignment.findById(assignment._id)
       .populate("createdBy", "fullName profilePicture")
       .populate("submissions.student", "fullName email studentId profilePicture");
+
+    // Notify student about the grade
+    try {
+      await notifyUser({
+        recipient: studentId,
+        sender: req.user._id,
+        type: "grade",
+        title: "Assignment Graded",
+        message: `Your submission for "${assignment.title}" has been graded: ${grade}/${assignment.maxPoints} pts.`,
+        link: `/courses/${assignment.course}`,
+        metadata: { courseId: assignment.course, assignmentId: assignment._id, grade },
+      });
+    } catch (notifErr) {
+      console.error("Failed to send grade notification:", notifErr);
+    }
 
     res.json(updated);
   } catch (error) {
@@ -565,6 +599,24 @@ exports.createAnnouncement = async (req, res) => {
       "author",
       "fullName profilePicture role"
     );
+
+    // Notify all enrolled students
+    try {
+      const course = await Course.findById(req.params.id);
+      if (course && course.enrolledStudents?.length > 0) {
+        await notifyMultipleUsers({
+          recipients: course.enrolledStudents,
+          sender: req.user._id,
+          type: "announcement",
+          title: `Announcement: ${title}`,
+          message: `${req.user.fullName} posted an announcement in ${course.code || course.title}: "${title}"`,
+          link: `/courses/${course._id}`,
+          metadata: { courseId: course._id, announcementId: announcement._id },
+        });
+      }
+    } catch (notifErr) {
+      console.error("Failed to send announcement notifications:", notifErr);
+    }
 
     res.status(201).json(populated);
   } catch (error) {

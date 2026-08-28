@@ -18,6 +18,8 @@ import StudyGroupList from "./pages/StudyGroupList";
 import StudyGroupWorkspace from "./pages/StudyGroupWorkspace";
 import DepartmentChannels from "./pages/DepartmentChannels";
 import AdminDashboard from "./pages/AdminDashboard";
+import DirectMessages from "./pages/DirectMessages";
+import Certificates from "./pages/Certificates";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +40,9 @@ function Router() {
       <Route path="/offer-skill" component={OfferSkill} />
       <Route path="/request-skill" component={RequestSkillPage} />
       <Route path="/my-sessions" component={MySessions} />
+      <Route path="/messages" component={DirectMessages} />
+      <Route path="/direct-messages" component={DirectMessages} />
+      <Route path="/certificates" component={Certificates} />
       <Route path="/calendar" component={Calendar} />
       <Route path="/notice-board" component={NoticeBoard} />
       <Route path="/academic-hub" component={CourseList} />

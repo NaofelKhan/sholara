@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import MI from "../MI";
 import C from "../../constants/colors";
 
@@ -6,7 +7,7 @@ const STATUS_STYLES = {
   confirmed: { bg: "#d4edda", color: "#155724", label: "Confirmed" },
   rescheduled: { bg: "#cce5ff", color: "#004085", label: "Rescheduled" },
   cancelled: { bg: "#f8d7da", color: "#721c24", label: "Cancelled" },
-  completed: { bg: "#e2e3e5", color: "#383d41", label: "Completed" },
+  completed: { bg: "#dcfce7", color: "#166534", label: "Completed" },
 };
 
 export default function SessionCard({
@@ -16,6 +17,9 @@ export default function SessionCard({
   onCancel,
   onConfirm,
   onComplete,
+  onOpenReview,
+  onOpenCertificate,
+  hasReviewed,
 }) {
   const isMentor = booking.mentor?._id === currentUserId;
   const other = isMentor ? booking.student : booking.mentor;
@@ -24,6 +28,7 @@ export default function SessionCard({
   const date = new Date(booking.scheduledAt);
   const isPast = date < new Date();
   const canAct = !["cancelled", "completed"].includes(booking.status);
+  const isCompleted = booking.status === "completed";
 
   return (
     <div
@@ -40,6 +45,8 @@ export default function SessionCard({
             background:
               booking.status === "confirmed"
                 ? C.secondary
+                : booking.status === "completed"
+                ? "#16a34a"
                 : booking.status === "cancelled"
                 ? C.error
                 : C.primaryFixedDim,
@@ -144,53 +151,92 @@ export default function SessionCard({
             </p>
           )}
 
-          {canAct && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {isMentor && booking.status === "pending" && (
-                <button
-                  onClick={() => onConfirm(booking)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold transition"
-                  style={{ background: C.secondary, color: C.onSecondary }}
-                >
-                  Confirm
-                </button>
-              )}
-
-              {isMentor &&
-                ["confirmed", "rescheduled"].includes(booking.status) &&
-                isPast && (
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            {canAct && (
+              <>
+                {isMentor && booking.status === "pending" && (
                   <button
-                    onClick={() => onComplete(booking)}
+                    onClick={() => onConfirm(booking)}
                     className="px-3 py-1.5 rounded-lg text-xs font-bold transition"
-                    style={{
-                      background: C.primaryFixed,
-                      color: C.primaryContainer,
-                    }}
+                    style={{ background: C.secondary, color: C.onSecondary }}
                   >
-                    Mark Complete
+                    Confirm
                   </button>
                 )}
 
-              <button
-                onClick={() => onReschedule(booking)}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold transition border"
+                {isMentor &&
+                  ["confirmed", "rescheduled"].includes(booking.status) &&
+                  isPast && (
+                    <button
+                      onClick={() => onComplete(booking)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold transition"
+                      style={{
+                        background: C.primaryFixed,
+                        color: C.primaryContainer,
+                      }}
+                    >
+                      Mark Complete
+                    </button>
+                  )}
+
+                <button
+                  onClick={() => onReschedule(booking)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold transition border"
+                  style={{
+                    borderColor: C.outlineVariant,
+                    color: C.primary,
+                  }}
+                >
+                  Reschedule
+                </button>
+
+                <button
+                  onClick={() => onCancel(booking)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold transition"
+                  style={{ background: "#fce8e8", color: C.error }}
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+
+            {/* Completed Session Actions: Rate & Review + Completion Certificate */}
+            {isCompleted && (
+              <>
+                <button
+                  onClick={() => onOpenCertificate?.(booking)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100"
+                >
+                  <MI name="workspace_premium" size={16} />
+                  Completion Certificate
+                </button>
+
+                <button
+                  onClick={() => onOpenReview?.(booking)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-[#002045] text-white hover:bg-[#1a365d]"
+                >
+                  <MI name="star" size={16} />
+                  {hasReviewed ? "View / Update Review" : "Rate Partner"}
+                </button>
+              </>
+            )}
+
+            {/* Direct Message Partner button */}
+            {other?._id && (
+              <Link
+                href={`/messages?user=${other._id}`}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition border flex items-center gap-1 hover:bg-[#eaedff]"
                 style={{
                   borderColor: C.outlineVariant,
-                  color: C.primary,
+                  color: C.onSurfaceVariant,
                 }}
               >
-                Reschedule
-              </button>
-
-              <button
-                onClick={() => onCancel(booking)}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold transition"
-                style={{ background: "#fce8e8", color: C.error }}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
+                <MI name="chat" size={14} />
+                Message {isMentor ? "Student" : "Mentor"}
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

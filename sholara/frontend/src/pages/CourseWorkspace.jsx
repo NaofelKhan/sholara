@@ -25,6 +25,7 @@ import {
   assignTA,
   removeTA,
 } from "../api/course";
+import CoursePollsSection from "../components/course/CoursePollsSection";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CourseWorkspace() {
@@ -368,6 +369,7 @@ export default function CourseWorkspace() {
     { id: "materials", label: "Materials", icon: "folder" },
     { id: "assignments", label: "Assignments", icon: "assignment" },
     { id: "discussions", label: "Discussions", icon: "forum" },
+    { id: "polls", label: "Polls & Surveys", icon: "poll" },
     { id: "attendance", label: "Attendance", icon: "how_to_reg" },
     { id: "grades", label: "Grades", icon: "grade" },
     { id: "members", label: "Members", icon: "group" },
@@ -1158,6 +1160,15 @@ export default function CourseWorkspace() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* 8. POLLS & SURVEYS TAB */}
+            {activeTab === "polls" && (
+              <CoursePollsSection
+                courseId={courseId}
+                canManage={canManageCourseTools}
+                currentUserId={user?._id}
+              />
             )}
 
           </div>

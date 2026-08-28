@@ -27,6 +27,13 @@ const {
   assignTA,
   removeTA,
 } = require("../controllers/courseController");
+const {
+  getCoursePolls,
+  createPoll,
+  submitResponse,
+  togglePollStatus,
+  deletePoll,
+} = require("../controllers/pollController");
 
 // All routes require login authentication
 router.use(protect);
@@ -47,6 +54,13 @@ router.delete("/:id/tas/:taId", removeTA);
 router.get("/:id/announcements", getAnnouncements);
 router.post("/:id/announcements", createAnnouncement);
 router.delete("/:id/announcements/:announcementId", deleteAnnouncement);
+
+// Polls & Surveys
+router.get("/:id/polls", getCoursePolls);
+router.post("/:id/polls", createPoll);
+router.post("/:id/polls/:pollId/respond", submitResponse);
+router.put("/:id/polls/:pollId/toggle", togglePollStatus);
+router.delete("/:id/polls/:pollId", deletePoll);
 
 // Materials
 router.get("/:id/materials", getMaterials);

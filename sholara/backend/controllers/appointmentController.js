@@ -1,5 +1,6 @@
 const Availability = require('../models/Availability');
 const Appointment = require('../models/Appointment');
+const { notifyUser } = require('../utils/notificationService');
 
 // @desc    Get available time slots for a specific faculty on a given date
 // @route   GET /api/appointments/slots/:facultyId?date=YYYY-MM-DD
@@ -58,6 +59,21 @@ exports.bookAppointment = async (req, res) => {
       endTime: slot.endTime,
       reason,
     });
+
+    // Notify the faculty member
+    try {
+      await notifyUser({
+        recipient: facultyId,
+        sender: studentId,
+        type: 'appointment',
+        title: 'New Appointment Scheduled',
+        message: `${req.user.fullName || 'A student'} booked an appointment on ${slot.date} (${slot.startTime} - ${slot.endTime}) for "${reason}".`,
+        link: '/calendar',
+        metadata: { appointmentId: appointment._id, date: slot.date },
+      });
+    } catch (notifErr) {
+      console.error('Failed to notify faculty for appointment:', notifErr);
+    }
 
     res.status(201).json({
       message: 'Appointment scheduled successfully',

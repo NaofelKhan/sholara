@@ -3,6 +3,8 @@ import { useAuth } from "../context/AuthContext";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import SessionCard from "../components/booking/SessionCard";
 import RescheduleModal from "../components/booking/RescheduleModal";
+import ReviewModal from "../components/booking/ReviewModal";
+import CertificateModal from "../components/booking/CertificateModal";
 import {
   getMyBookings,
   cancelBooking,
@@ -43,7 +45,11 @@ export default function MySessions() {
   const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
+
   const [rescheduleTarget, setRescheduleTarget] = useState(null);
+  const [reviewTarget, setReviewTarget] = useState(null);
+  const [certTarget, setCertTarget] = useState(null);
+
   const [toast, setToast] = useState(null);
 
   const showToast = (message, type = "success") => {
@@ -99,7 +105,7 @@ export default function MySessions() {
   const handleComplete = async (booking) => {
     try {
       await completeBooking(booking._id);
-      showToast("Session marked as completed.");
+      showToast("Session marked as completed. You can now rate your partner & claim your certificate!");
       fetchBookings();
     } catch (err) {
       showToast(err.response?.data?.message || "Action failed.", "error");
@@ -111,9 +117,14 @@ export default function MySessions() {
     fetchBookings();
   };
 
+  const handleReviewSuccess = () => {
+    showToast("Review submitted successfully! Thank you.");
+    fetchBookings();
+  };
+
   return (
     <DashboardLayout profile={profile}>
-      <main className="p-10" style={{ background: C.background }}>
+      <main className="p-6 md:p-10" style={{ background: C.background }}>
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <h1
@@ -123,7 +134,7 @@ export default function MySessions() {
               My Sessions
             </h1>
             <p style={{ color: C.onSurfaceVariant }}>
-              Book, manage, reschedule, or cancel your skill exchange sessions.
+              Book, manage, reschedule, rate partners, or access completion certificates for your skill exchange sessions.
             </p>
           </div>
 
@@ -226,6 +237,8 @@ export default function MySessions() {
                   onCancel={handleCancel}
                   onConfirm={handleConfirm}
                   onComplete={handleComplete}
+                  onOpenReview={setReviewTarget}
+                  onOpenCertificate={setCertTarget}
                 />
               ))}
             </div>
@@ -233,11 +246,28 @@ export default function MySessions() {
         </div>
       </main>
 
+      {/* Modals */}
       {rescheduleTarget && (
         <RescheduleModal
           booking={rescheduleTarget}
           onClose={() => setRescheduleTarget(null)}
           onSuccess={handleRescheduleSuccess}
+        />
+      )}
+
+      {reviewTarget && (
+        <ReviewModal
+          booking={reviewTarget}
+          currentUserId={user?._id}
+          onClose={() => setReviewTarget(null)}
+          onSuccess={handleReviewSuccess}
+        />
+      )}
+
+      {certTarget && (
+        <CertificateModal
+          booking={certTarget}
+          onClose={() => setCertTarget(null)}
         />
       )}
 
