@@ -25,11 +25,18 @@ const registerUser = async (req, res) => {
             });
         }
 
+        let assignedRole = role || "student";
+        if (assignedRole === "admin") {
+            return res.status(400).json({
+                message: "Administrator accounts cannot be created via public signup. Please contact system administration.",
+            });
+        }
+
         const user = await User.create({
             fullName,
             email,
             password,
-            role,
+            role: assignedRole,
             university,
             department,
             studentId,
