@@ -31,6 +31,22 @@ export const removeMember = async (courseId, studentId) => {
   return data;
 };
 
+// Course Announcements API
+export const getAnnouncements = async (courseId) => {
+  const { data } = await api.get(`/courses/${courseId}/announcements`);
+  return data;
+};
+
+export const createAnnouncement = async (courseId, announcementData) => {
+  const { data } = await api.post(`/courses/${courseId}/announcements`, announcementData);
+  return data;
+};
+
+export const deleteAnnouncement = async (courseId, announcementId) => {
+  const { data } = await api.delete(`/courses/${courseId}/announcements/${announcementId}`);
+  return data;
+};
+
 // Learning Materials API
 export const getMaterials = async (courseId) => {
   const { data } = await api.get(`/courses/${courseId}/materials`);

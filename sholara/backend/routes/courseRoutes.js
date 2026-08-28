@@ -21,6 +21,9 @@ const {
   getAttendance,
   markAttendance,
   getGrades,
+  getAnnouncements,
+  createAnnouncement,
+  deleteAnnouncement,
 } = require("../controllers/courseController");
 
 // All routes require login authentication
@@ -33,6 +36,11 @@ router.post("/join", joinCourse);
 router.get("/:id", getCourseById);
 router.delete("/:id", deleteCourse);
 router.delete("/:id/members/:studentId", removeMember);
+
+// Course Announcement Board
+router.get("/:id/announcements", getAnnouncements);
+router.post("/:id/announcements", createAnnouncement);
+router.delete("/:id/announcements/:announcementId", deleteAnnouncement);
 
 // Materials
 router.get("/:id/materials", getMaterials);

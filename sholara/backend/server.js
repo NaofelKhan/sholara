@@ -21,6 +21,7 @@ const marketplaceSkillRoutes = require("./routes/marketplaceSkillRoutes");
 const appointmentRoutes = require("./routes/appointmentRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const studyGroupRoutes = require("./routes/studyGroupRoutes");
+const departmentChannelRoutes = require("./routes/departmentChannelRoutes");
 
 console.log("Cloudinary SDK Config:");
 console.log(cloudinary.config());
@@ -58,6 +59,7 @@ app.use("/api/marketplace-skills", marketplaceSkillRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/study-groups", studyGroupRoutes);
+app.use("/api/department-channels", departmentChannelRoutes);
 
 
 app.get("/", (req, res) => {

@@ -3,6 +3,7 @@ const CourseMaterial = require("../models/CourseMaterial");
 const CourseAssignment = require("../models/CourseAssignment");
 const CourseDiscussion = require("../models/CourseDiscussion");
 const CourseAttendance = require("../models/CourseAttendance");
+const CourseAnnouncement = require("../models/CourseAnnouncement");
 const User = require("../models/User");
 
 // Generate unique join code
@@ -518,5 +519,56 @@ exports.getGrades = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch grades", error: error.message });
+  }
+};
+
+// --- COURSE ANNOUNCEMENTS BOARD ---
+
+// GET /api/courses/:id/announcements
+exports.getAnnouncements = async (req, res) => {
+  try {
+    const announcements = await CourseAnnouncement.find({ course: req.params.id })
+      .populate("author", "fullName profilePicture role")
+      .sort({ isPinned: -1, createdAt: -1 });
+    res.json(announcements);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch announcements", error: error.message });
+  }
+};
+
+// POST /api/courses/:id/announcements
+exports.createAnnouncement = async (req, res) => {
+  try {
+    const { title, content, isPinned } = req.body;
+    if (!title || !content) {
+      return res.status(400).json({ message: "Title and Content are required" });
+    }
+
+    const announcement = await CourseAnnouncement.create({
+      course: req.params.id,
+      title,
+      content,
+      isPinned: isPinned || false,
+      author: req.user._id,
+    });
+
+    const populated = await CourseAnnouncement.findById(announcement._id).populate(
+      "author",
+      "fullName profilePicture role"
+    );
+
+    res.status(201).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to post announcement", error: error.message });
+  }
+};
+
+// DELETE /api/courses/:id/announcements/:announcementId
+exports.deleteAnnouncement = async (req, res) => {
+  try {
+    await CourseAnnouncement.findByIdAndDelete(req.params.announcementId);
+    res.json({ message: "Announcement deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete announcement", error: error.message });
   }
 };

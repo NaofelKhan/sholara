@@ -19,6 +19,9 @@ import {
   getGrades,
   removeMember,
   deleteCourse,
+  getAnnouncements,
+  createAnnouncement,
+  deleteAnnouncement,
 } from "../api/course";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,17 +36,19 @@ export default function CourseWorkspace() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Tab Data States
+  const [announcements, setAnnouncements] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [discussions, setDiscussions] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [gradesData, setGradesData] = useState(null);
 
-  // Loading states per tab
   const [tabLoading, setTabLoading] = useState(false);
 
-  // Modals & Inputs
+  const [showPostAnnouncement, setShowPostAnnouncement] = useState(false);
+  const [announcementForm, setAnnouncementForm] = useState({ title: "", content: "", isPinned: false });
+  const [submittingAnnouncement, setSubmittingAnnouncement] = useState(false);
+
   const [showAddMaterial, setShowAddMaterial] = useState(false);
   const [materialForm, setMaterialForm] = useState({ title: "", description: "", fileUrl: "", fileType: "link" });
 
@@ -53,7 +58,7 @@ export default function CourseWorkspace() {
   const [submitModalAssignment, setSubmitModalAssignment] = useState(null);
   const [submissionForm, setSubmissionForm] = useState({ fileUrl: "", textContent: "" });
 
-  const [gradeModalData, setGradeModalData] = useState(null); // { assignment, submission }
+  const [gradeModalData, setGradeModalData] = useState(null);
   const [gradeForm, setGradeForm] = useState({ grade: 0, feedback: "" });
 
   const [showCreateDiscussion, setShowCreateDiscussion] = useState(false);
@@ -63,7 +68,7 @@ export default function CourseWorkspace() {
 
   const [showMarkAttendance, setShowMarkAttendance] = useState(false);
   const [attendanceForm, setAttendanceForm] = useState({ topic: "Lecture Session", date: new Date().toISOString().split("T")[0] });
-  const [attendanceRecords, setAttendanceRecords] = useState([]); // [{ studentId, status }]
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
 
   const fetchCourseData = async () => {
     try {
@@ -88,14 +93,16 @@ export default function CourseWorkspace() {
     }
   }, [courseId]);
 
-  // Load Tab Content dynamically
   useEffect(() => {
     if (!courseId) return;
 
     const loadTabData = async () => {
       setTabLoading(true);
       try {
-        if (activeTab === "materials") {
+        if (activeTab === "overview") {
+          const res = await getAnnouncements(courseId);
+          setAnnouncements(res);
+        } else if (activeTab === "materials") {
           const res = await getMaterials(courseId);
           setMaterials(res);
         } else if (activeTab === "assignments") {
@@ -154,9 +161,34 @@ export default function CourseWorkspace() {
     }
   };
 
-  // --- Handlers for Tab Actions ---
+  const handleCreateAnnouncement = async (e) => {
+    e.preventDefault();
+    if (!announcementForm.title || !announcementForm.content) return;
+    try {
+      setSubmittingAnnouncement(true);
+      const res = await createAnnouncement(courseId, announcementForm);
+      setAnnouncements([res, ...announcements]);
+      setShowPostAnnouncement(false);
+      setAnnouncementForm({ title: "", content: "", isPinned: false });
+      toast({ title: "Announcement Broadcasted", description: `Posted '${res.title}'` });
+    } catch (err) {
+      toast({ title: "Error", description: err.response?.data?.message || "Failed to post announcement", variant: "destructive" });
+    } finally {
+      setSubmittingAnnouncement(false);
+    }
+  };
 
-  // Material
+  const handleDeleteAnnouncement = async (annId) => {
+    if (!window.confirm("Are you sure you want to delete this course announcement?")) return;
+    try {
+      await deleteAnnouncement(courseId, annId);
+      setAnnouncements(announcements.filter((a) => a._id !== annId));
+      toast({ title: "Deleted", description: "Announcement removed." });
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to delete announcement", variant: "destructive" });
+    }
+  };
+
   const handleAddMaterial = async (e) => {
     e.preventDefault();
     try {
@@ -180,7 +212,6 @@ export default function CourseWorkspace() {
     }
   };
 
-  // Assignment
   const handleCreateAssign = async (e) => {
     e.preventDefault();
     try {
@@ -223,7 +254,6 @@ export default function CourseWorkspace() {
     }
   };
 
-  // Discussion
   const handleCreateDisc = async (e) => {
     e.preventDefault();
     try {
@@ -249,7 +279,6 @@ export default function CourseWorkspace() {
     }
   };
 
-  // Attendance
   const openMarkAttendanceModal = () => {
     const initialRecords = (course.enrolledStudents || []).map((s) => ({
       student: s._id,
@@ -305,6 +334,7 @@ export default function CourseWorkspace() {
   return (
     <DashboardLayout profile={user}>
       <div className="p-8 max-w-7xl mx-auto space-y-6">
+
         {/* Workspace Banner */}
         <div className={`bg-gradient-to-r ${course.coverGradient || "from-[#002045] to-[#1a365d]"} rounded-2xl p-8 text-white shadow-lg relative overflow-hidden space-y-4`}>
           <div className="flex flex-wrap justify-between items-start gap-4">
@@ -338,15 +368,10 @@ export default function CourseWorkspace() {
 
           <div className="flex flex-wrap justify-between items-center pt-4 border-t border-white/10 text-xs text-blue-100 gap-4">
             <div className="flex items-center gap-4">
-              <span>
-                Instructor: <strong className="text-white">{course.instructor?.fullName}</strong>
-              </span>
+              <span>Instructor: <strong className="text-white">{course.instructor?.fullName}</strong></span>
               <span>•</span>
-              <span>
-                {course.enrolledStudents?.length || 0} Enrolled Student(s)
-              </span>
+              <span>{course.enrolledStudents?.length || 0} Enrolled Student(s)</span>
             </div>
-
             {isInstructor && (
               <button
                 onClick={handleDeleteCourse}
@@ -367,11 +392,10 @@ export default function CourseWorkspace() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
-                  isActive
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${isActive
                     ? "bg-[#002045] text-white shadow-sm"
                     : "text-[#43474e] hover:bg-[#faf8ff] hover:text-[#002045]"
-                }`}
+                  }`}
               >
                 <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
                 {tab.label}
@@ -387,6 +411,7 @@ export default function CourseWorkspace() {
           </div>
         ) : (
           <div className="space-y-6">
+
             {/* 1. OVERVIEW TAB */}
             {activeTab === "overview" && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -402,7 +427,7 @@ export default function CourseWorkspace() {
                     </p>
                   </div>
 
-                  {/* Quick Stats Grid */}
+                  {/* Quick Stats */}
                   <div className="grid grid-cols-3 gap-4">
                     <div className="bg-white rounded-xl p-5 border border-[#dae2fd] shadow-sm flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-[#eaedff] text-[#002045] flex items-center justify-center">
@@ -434,14 +459,93 @@ export default function CourseWorkspace() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Announcement Board */}
+                  <div className="bg-white rounded-2xl border border-[#dae2fd] p-6 shadow-sm space-y-4">
+                    <div className="flex justify-between items-center border-b border-[#f2f3ff] pb-4">
+                      <div className="space-y-0.5">
+                        <h3 className="text-lg font-bold text-[#002045] flex items-center gap-2">
+                          <span className="material-symbols-outlined text-amber-500">campaign</span>
+                          Course Announcement Board
+                        </h3>
+                        <p className="text-xs text-[#74777f]">
+                          Important course updates, schedule notices, and announcements from instructor.
+                        </p>
+                      </div>
+                      {isInstructor && (
+                        <button
+                          onClick={() => setShowPostAnnouncement(true)}
+                          className="px-4 py-2 bg-[#002045] text-white hover:bg-[#1a365d] rounded-xl text-xs font-bold flex items-center gap-1.5 transition shrink-0"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">add_comment</span>
+                          Post Announcement
+                        </button>
+                      )}
+                    </div>
+
+                    {announcements.length === 0 ? (
+                      <div className="p-8 text-center bg-[#faf8ff] rounded-xl border border-dashed border-[#dae2fd] space-y-2">
+                        <span className="material-symbols-outlined text-3xl text-[#74777f]">campaign</span>
+                        <p className="text-xs font-semibold text-[#74777f]">No course announcements posted yet.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {announcements.map((ann) => (
+                          <div
+                            key={ann._id}
+                            className={`p-4 rounded-xl border transition space-y-2 ${ann.isPinned
+                                ? "bg-[#fffdf5] border-amber-300 ring-1 ring-amber-200"
+                                : "bg-[#faf8ff] border-[#dae2fd]"
+                              }`}
+                          >
+                            <div className="flex justify-between items-start gap-2">
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={ann.author?.profilePicture || "https://media.istockphoto.com/id/1288129985/tr/vekt%C3%B6r/bir-ki%C5%9Finin-yer-tutucunun-eksik-g%C3%B6r%C3%BCnt%C3%BCs%C3%BC.jpg"}
+                                  alt="author"
+                                  className="w-8 h-8 rounded-full object-cover"
+                                />
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h5 className="text-xs font-bold text-[#002045]">{ann.author?.fullName}</h5>
+                                    <span className="text-[10px] font-bold bg-[#002045] text-white px-2 py-0.5 rounded uppercase">
+                                      {ann.author?.role === "teacher" || ann.author?.role === "faculty" ? "Instructor" : "Author"}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-[#74777f]">{new Date(ann.createdAt).toLocaleString()}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {ann.isPinned && (
+                                  <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-amber-300">
+                                    <span className="material-symbols-outlined text-[12px]">push_pin</span>
+                                    Pinned Notice
+                                  </span>
+                                )}
+                                {isInstructor && (
+                                  <button
+                                    onClick={() => handleDeleteAnnouncement(ann._id)}
+                                    className="p-1 text-red-500 hover:bg-red-50 rounded"
+                                    title="Delete Announcement"
+                                  >
+                                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            <h4 className="text-sm font-bold text-[#002045]">{ann.title}</h4>
+                            <p className="text-xs text-[#43474e] leading-relaxed whitespace-pre-line">{ann.content}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Sidebar Info Card */}
+                {/* Sidebar */}
                 <div className="space-y-6">
                   <div className="bg-white rounded-2xl border border-[#dae2fd] p-6 shadow-sm space-y-4">
-                    <h4 className="text-sm font-bold text-[#002045] uppercase tracking-wider">
-                      Instructor Details
-                    </h4>
+                    <h4 className="text-sm font-bold text-[#002045] uppercase tracking-wider">Instructor Details</h4>
                     <div className="flex items-center gap-3">
                       <img
                         src={course.instructor?.profilePicture || "https://media.istockphoto.com/id/1288129985/tr/vekt%C3%B6r/bir-ki%C5%9Finin-yer-tutucunun-eksik-g%C3%B6r%C3%BCnt%C3%BCs%C3%BC.jpg"}
@@ -485,7 +589,6 @@ export default function CourseWorkspace() {
                     <h3 className="text-lg font-bold text-[#002045]">Learning Materials</h3>
                     <p className="text-xs text-[#74777f]">Access slides, lecture notes, syllabus, and external resources.</p>
                   </div>
-
                   {isInstructor && (
                     <button
                       onClick={() => setShowAddMaterial(true)}
@@ -522,7 +625,6 @@ export default function CourseWorkspace() {
                             </div>
                           </div>
                         </div>
-
                         <div className="flex items-center gap-2 shrink-0">
                           {mat.fileUrl && (
                             <a
@@ -560,7 +662,6 @@ export default function CourseWorkspace() {
                     <h3 className="text-lg font-bold text-[#002045]">Course Assignments</h3>
                     <p className="text-xs text-[#74777f]">View due dates, submit tasks, and review grades.</p>
                   </div>
-
                   {isInstructor && (
                     <button
                       onClick={() => setShowCreateAssignment(true)}
@@ -598,7 +699,6 @@ export default function CourseWorkspace() {
                               </p>
                             </div>
 
-                            {/* Actions according to Role */}
                             {!isInstructor ? (
                               <div>
                                 {isGraded ? (
@@ -635,7 +735,6 @@ export default function CourseWorkspace() {
 
                           <p className="text-xs text-[#43474e]">{assign.description || "No instructions provided."}</p>
 
-                          {/* Student view feedback if graded */}
                           {!isInstructor && isGraded && userSub.feedback && (
                             <div className="bg-white p-3 rounded-xl border border-emerald-200 text-xs space-y-1">
                               <p className="font-bold text-emerald-900">Instructor Feedback:</p>
@@ -643,21 +742,17 @@ export default function CourseWorkspace() {
                             </div>
                           )}
 
-                          {/* Instructor Submissions Drawer */}
                           {isInstructor && assign.submissions?.length > 0 && (
                             <div className="bg-white p-4 rounded-xl border border-[#dae2fd] space-y-3 mt-3">
                               <h5 className="text-xs font-bold text-[#002045] uppercase tracking-wider">
                                 Student Submissions ({assign.submissions.length})
                               </h5>
-
                               <div className="divide-y divide-[#f2f3ff]">
                                 {assign.submissions.map((sub) => (
                                   <div key={sub.student?._id || sub._id} className="py-2.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                                     <div className="space-y-0.5">
                                       <p className="text-xs font-bold text-[#131b2e]">{sub.student?.fullName || "Student"}</p>
-                                      <p className="text-[11px] text-[#74777f]">
-                                        Submitted on: {new Date(sub.submittedAt).toLocaleString()}
-                                      </p>
+                                      <p className="text-[11px] text-[#74777f]">Submitted on: {new Date(sub.submittedAt).toLocaleString()}</p>
                                       {sub.textContent && <p className="text-xs text-[#43474e] italic">"{sub.textContent}"</p>}
                                       {sub.fileUrl && (
                                         <a href={sub.fileUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 font-bold underline block">
@@ -665,7 +760,6 @@ export default function CourseWorkspace() {
                                         </a>
                                       )}
                                     </div>
-
                                     <button
                                       onClick={() => {
                                         setGradeModalData({ assignment: assign, submission: sub });
@@ -696,7 +790,6 @@ export default function CourseWorkspace() {
                     <h3 className="text-lg font-bold text-[#002045]">Course Discussion Forum</h3>
                     <p className="text-xs text-[#74777f]">Ask questions, collaborate, and exchange ideas with peers and instructors.</p>
                   </div>
-
                   <button
                     onClick={() => setShowCreateDiscussion(true)}
                     className="bg-[#002045] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-[#1a365d] transition"
@@ -729,7 +822,6 @@ export default function CourseWorkspace() {
                               </p>
                             </div>
                           </div>
-
                           <span className="bg-[#eaedff] text-[#002045] text-xs font-bold px-2.5 py-1 rounded-full">
                             {disc.replies?.length || 0} Replies
                           </span>
@@ -739,7 +831,6 @@ export default function CourseWorkspace() {
                           {disc.content}
                         </p>
 
-                        {/* Reply Thread */}
                         <div className="space-y-3 pt-2">
                           {disc.replies?.map((rep, idx) => (
                             <div key={idx} className="ml-6 p-3 bg-white rounded-xl border border-[#dae2fd] space-y-1">
@@ -751,7 +842,6 @@ export default function CourseWorkspace() {
                             </div>
                           ))}
 
-                          {/* Reply Box */}
                           <div className="flex gap-2 pt-2">
                             <input
                               type="text"
@@ -786,7 +876,6 @@ export default function CourseWorkspace() {
                     <h3 className="text-lg font-bold text-[#002045]">Attendance Log</h3>
                     <p className="text-xs text-[#74777f]">Track class presence and lecture attendance records.</p>
                   </div>
-
                   {isInstructor && (
                     <button
                       onClick={openMarkAttendanceModal}
@@ -807,38 +896,31 @@ export default function CourseWorkspace() {
                   <div className="space-y-4">
                     {attendance.map((session) => {
                       const userRecord = session.records?.find((r) => r.student?._id === user?._id || r.student === user?._id);
-
                       return (
                         <div key={session._id} className="p-4 border border-[#dae2fd] rounded-xl bg-[#faf8ff] space-y-3">
                           <div className="flex justify-between items-center">
                             <div>
                               <h4 className="text-sm font-bold text-[#002045]">{session.topic}</h4>
-                              <p className="text-xs text-[#74777f]">
-                                Date: {new Date(session.date).toLocaleDateString()}
-                              </p>
+                              <p className="text-xs text-[#74777f]">Date: {new Date(session.date).toLocaleDateString()}</p>
                             </div>
-
                             {!isInstructor && userRecord && (
-                              <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${
-                                userRecord.status === "present"
+                              <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${userRecord.status === "present"
                                   ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                                   : userRecord.status === "late"
-                                  ? "bg-amber-100 text-amber-800 border border-amber-300"
-                                  : "bg-red-100 text-red-800 border border-red-300"
-                              }`}>
+                                    ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                    : "bg-red-100 text-red-800 border border-red-300"
+                                }`}>
                                 Status: {userRecord.status}
                               </span>
                             )}
                           </div>
-
                           {isInstructor && (
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[#dae2fd]">
                               {session.records?.map((r, idx) => (
                                 <div key={idx} className="p-2 bg-white rounded-lg border border-[#dae2fd] text-xs space-y-1">
                                   <p className="font-bold text-[#131b2e] truncate">{r.student?.fullName || "Student"}</p>
-                                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded capitalize ${
-                                    r.status === "present" ? "bg-emerald-100 text-emerald-800" : r.status === "late" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"
-                                  }`}>
+                                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded capitalize ${r.status === "present" ? "bg-emerald-100 text-emerald-800" : r.status === "late" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"
+                                    }`}>
                                     {r.status}
                                   </span>
                                 </div>
@@ -892,7 +974,6 @@ export default function CourseWorkspace() {
                               />
                               {row.student.fullName}
                             </td>
-
                             {row.scores?.map((sc) => (
                               <td key={sc.assignmentId} className="p-3">
                                 {sc.grade !== null ? (
@@ -902,11 +983,7 @@ export default function CourseWorkspace() {
                                 )}
                               </td>
                             ))}
-
-                            <td className="p-3 font-bold text-[#002045]">
-                              {row.totalEarned} / {row.totalMax}
-                            </td>
-
+                            <td className="p-3 font-bold text-[#002045]">{row.totalEarned} / {row.totalMax}</td>
                             <td className="p-3">
                               <span className="bg-[#eaedff] text-[#002045] font-extrabold px-2.5 py-1 rounded-md">
                                 {row.percentage}%
@@ -932,7 +1009,6 @@ export default function CourseWorkspace() {
                 </div>
 
                 <div className="space-y-6">
-                  {/* Instructor */}
                   <div className="space-y-3">
                     <h4 className="text-xs font-bold text-[#002045] uppercase tracking-wider">Instructor</h4>
                     <div className="p-4 border border-[#dae2fd] rounded-xl flex items-center justify-between bg-[#faf8ff]">
@@ -953,12 +1029,10 @@ export default function CourseWorkspace() {
                     </div>
                   </div>
 
-                  {/* Enrolled Students */}
                   <div className="space-y-3">
                     <h4 className="text-xs font-bold text-[#002045] uppercase tracking-wider">
                       Students ({course.enrolledStudents?.length || 0})
                     </h4>
-
                     {course.enrolledStudents?.length === 0 ? (
                       <p className="text-xs text-[#74777f] py-4">No students enrolled yet. Share the Join Code!</p>
                     ) : (
@@ -976,7 +1050,6 @@ export default function CourseWorkspace() {
                                 <p className="text-[11px] text-[#74777f]">{st.email}</p>
                               </div>
                             </div>
-
                             {isInstructor && (
                               <button
                                 onClick={() => handleRemoveStudent(st._id)}
@@ -994,310 +1067,381 @@ export default function CourseWorkspace() {
                 </div>
               </div>
             )}
+
           </div>
         )}
-      </div>
 
-      {/* ADD MATERIAL MODAL */}
-      {showAddMaterial && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
-            <h3 className="text-lg font-bold text-[#002045]">Add Learning Material</h3>
-            <form onSubmit={handleAddMaterial} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Chapter 1 Lecture Notes"
-                  value={materialForm.title}
-                  onChange={(e) => setMaterialForm({ ...materialForm, title: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Type</label>
-                <select
-                  value={materialForm.fileType}
-                  onChange={(e) => setMaterialForm({ ...materialForm, fileType: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs bg-white"
-                >
-                  <option value="link">Web Link / Resource</option>
-                  <option value="pdf">PDF Document</option>
-                  <option value="doc">Word / Text Document</option>
-                  <option value="video">Video Lecture</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Resource Link / File URL</label>
-                <input
-                  type="url"
-                  placeholder="https://..."
-                  value={materialForm.fileUrl}
-                  onChange={(e) => setMaterialForm({ ...materialForm, fileUrl: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Description</label>
-                <textarea
-                  rows="2"
-                  placeholder="Brief note for students..."
-                  value={materialForm.description}
-                  onChange={(e) => setMaterialForm({ ...materialForm, description: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowAddMaterial(false)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
-                <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Add Material</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* CREATE ASSIGNMENT MODAL */}
-      {showCreateAssignment && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
-            <h3 className="text-lg font-bold text-[#002045]">Create Assignment</h3>
-            <form onSubmit={handleCreateAssign} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Assignment 1: Array Operations"
-                  value={assignmentForm.title}
-                  onChange={(e) => setAssignmentForm({ ...assignmentForm, title: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
+        {/* ADD MATERIAL MODAL */}
+        {showAddMaterial && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
+              <h3 className="text-lg font-bold text-[#002045]">Add Learning Material</h3>
+              <form onSubmit={handleAddMaterial} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#131b2e]">Due Date *</label>
-                  <input
-                    type="date"
-                    required
-                    value={assignmentForm.dueDate}
-                    onChange={(e) => setAssignmentForm({ ...assignmentForm, dueDate: e.target.value })}
-                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#131b2e]">Max Points</label>
-                  <input
-                    type="number"
-                    value={assignmentForm.maxPoints}
-                    onChange={(e) => setAssignmentForm({ ...assignmentForm, maxPoints: e.target.value })}
-                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Instructions</label>
-                <textarea
-                  rows="3"
-                  placeholder="Task requirements..."
-                  value={assignmentForm.description}
-                  onChange={(e) => setAssignmentForm({ ...assignmentForm, description: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowCreateAssignment(false)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
-                <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Create Assignment</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* SUBMIT ASSIGNMENT MODAL */}
-      {submitModalAssignment && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
-            <h3 className="text-lg font-bold text-[#002045]">Submit Assignment: {submitModalAssignment.title}</h3>
-            <form onSubmit={handleSubmitAssign} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Solution Text / Notes</label>
-                <textarea
-                  rows="3"
-                  placeholder="Enter your written answer or notes..."
-                  value={submissionForm.textContent}
-                  onChange={(e) => setSubmissionForm({ ...submissionForm, textContent: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Submission Link / File URL</label>
-                <input
-                  type="url"
-                  placeholder="https://drive.google.com/..."
-                  value={submissionForm.fileUrl}
-                  onChange={(e) => setSubmissionForm({ ...submissionForm, fileUrl: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setSubmitModalAssignment(null)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
-                <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Submit Solution</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* GRADE SUBMISSION MODAL */}
-      {gradeModalData && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
-            <h3 className="text-lg font-bold text-[#002045]">Grade {gradeModalData.submission.student?.fullName}</h3>
-            <form onSubmit={handleGradeAssign} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Grade Score (out of {gradeModalData.assignment.maxPoints})</label>
-                <input
-                  type="number"
-                  max={gradeModalData.assignment.maxPoints}
-                  min={0}
-                  required
-                  value={gradeForm.grade}
-                  onChange={(e) => setGradeForm({ ...gradeForm, grade: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs font-bold text-[#002045]"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Feedback</label>
-                <textarea
-                  rows="3"
-                  placeholder="Feedback for student..."
-                  value={gradeForm.feedback}
-                  onChange={(e) => setGradeForm({ ...gradeForm, feedback: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setGradeModalData(null)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
-                <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Save Grade</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* CREATE DISCUSSION MODAL */}
-      {showCreateDiscussion && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
-            <h3 className="text-lg font-bold text-[#002045]">Post Discussion Topic</h3>
-            <form onSubmit={handleCreateDisc} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Topic Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Question on Midterm Topic 2"
-                  value={discussionForm.title}
-                  onChange={(e) => setDiscussionForm({ ...discussionForm, title: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#131b2e]">Content *</label>
-                <textarea
-                  rows="4"
-                  required
-                  placeholder="Details of your discussion topic..."
-                  value={discussionForm.content}
-                  onChange={(e) => setDiscussionForm({ ...discussionForm, content: e.target.value })}
-                  className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowCreateDiscussion(false)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
-                <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Post Topic</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MARK ATTENDANCE MODAL */}
-      {showMarkAttendance && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-[#dae2fd] space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-[#002045]">Mark Attendance</h3>
-            <form onSubmit={handleSaveAttendance} className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs font-semibold text-[#131b2e]">Session Date *</label>
-                  <input
-                    type="date"
-                    required
-                    value={attendanceForm.date}
-                    onChange={(e) => setAttendanceForm({ ...attendanceForm, date: e.target.value })}
-                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#131b2e]">Topic</label>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Title *</label>
                   <input
                     type="text"
-                    value={attendanceForm.topic}
-                    onChange={(e) => setAttendanceForm({ ...attendanceForm, topic: e.target.value })}
+                    required
+                    placeholder="e.g. Chapter 1 Lecture Notes"
+                    value={materialForm.title}
+                    onChange={(e) => setMaterialForm({ ...materialForm, title: e.target.value })}
                     className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <label className="block text-xs font-bold text-[#002045]">Student Roster</label>
-                {attendanceRecords.length === 0 ? (
-                  <p className="text-xs text-[#74777f]">No students enrolled to mark.</p>
-                ) : (
-                  <div className="divide-y divide-[#f2f3ff] border border-[#dae2fd] rounded-xl p-2 bg-[#faf8ff]">
-                    {attendanceRecords.map((rec, idx) => (
-                      <div key={rec.student} className="py-2 flex items-center justify-between text-xs">
-                        <span className="font-bold text-[#131b2e]">{rec.name}</span>
-                        <div className="flex gap-2">
-                          {["present", "late", "absent"].map((st) => (
-                            <button
-                              key={st}
-                              type="button"
-                              onClick={() => {
-                                const next = [...attendanceRecords];
-                                next[idx].status = st;
-                                setAttendanceRecords(next);
-                              }}
-                              className={`px-2.5 py-1 rounded text-[11px] font-bold capitalize transition ${
-                                rec.status === st
-                                  ? st === "present"
-                                    ? "bg-emerald-600 text-white"
-                                    : st === "late"
-                                    ? "bg-amber-500 text-white"
-                                    : "bg-red-600 text-white"
-                                  : "bg-white text-[#74777f] border border-[#c4c6cf]"
-                              }`}
-                            >
-                              {st}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-[#dae2fd]">
-                <button type="button" onClick={() => setShowMarkAttendance(false)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
-                <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Save Record</button>
-              </div>
-            </form>
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Type</label>
+                  <select
+                    value={materialForm.fileType}
+                    onChange={(e) => setMaterialForm({ ...materialForm, fileType: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs bg-white"
+                  >
+                    <option value="link">Web Link / Resource</option>
+                    <option value="pdf">PDF Document</option>
+                    <option value="doc">Word / Text Document</option>
+                    <option value="video">Video Lecture</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Resource Link / File URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={materialForm.fileUrl}
+                    onChange={(e) => setMaterialForm({ ...materialForm, fileUrl: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Description</label>
+                  <textarea
+                    rows="2"
+                    placeholder="Brief note for students..."
+                    value={materialForm.description}
+                    onChange={(e) => setMaterialForm({ ...materialForm, description: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button type="button" onClick={() => setShowAddMaterial(false)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
+                  <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Add Material</button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* CREATE ASSIGNMENT MODAL */}
+        {showCreateAssignment && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
+              <h3 className="text-lg font-bold text-[#002045]">Create Assignment</h3>
+              <form onSubmit={handleCreateAssign} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Title *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Assignment 1: Array Operations"
+                    value={assignmentForm.title}
+                    onChange={(e) => setAssignmentForm({ ...assignmentForm, title: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#131b2e]">Due Date *</label>
+                    <input
+                      type="date"
+                      required
+                      value={assignmentForm.dueDate}
+                      onChange={(e) => setAssignmentForm({ ...assignmentForm, dueDate: e.target.value })}
+                      className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#131b2e]">Max Points</label>
+                    <input
+                      type="number"
+                      value={assignmentForm.maxPoints}
+                      onChange={(e) => setAssignmentForm({ ...assignmentForm, maxPoints: e.target.value })}
+                      className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Instructions</label>
+                  <textarea
+                    rows="3"
+                    placeholder="Task requirements..."
+                    value={assignmentForm.description}
+                    onChange={(e) => setAssignmentForm({ ...assignmentForm, description: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button type="button" onClick={() => setShowCreateAssignment(false)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
+                  <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Create Assignment</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* SUBMIT ASSIGNMENT MODAL */}
+        {submitModalAssignment && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
+              <h3 className="text-lg font-bold text-[#002045]">Submit Assignment: {submitModalAssignment.title}</h3>
+              <form onSubmit={handleSubmitAssign} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Solution Text / Notes</label>
+                  <textarea
+                    rows="3"
+                    placeholder="Enter your written answer or notes..."
+                    value={submissionForm.textContent}
+                    onChange={(e) => setSubmissionForm({ ...submissionForm, textContent: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Submission Link / File URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://drive.google.com/..."
+                    value={submissionForm.fileUrl}
+                    onChange={(e) => setSubmissionForm({ ...submissionForm, fileUrl: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button type="button" onClick={() => setSubmitModalAssignment(null)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
+                  <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Submit Solution</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* GRADE SUBMISSION MODAL */}
+        {gradeModalData && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
+              <h3 className="text-lg font-bold text-[#002045]">Grade {gradeModalData.submission.student?.fullName}</h3>
+              <form onSubmit={handleGradeAssign} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Grade Score (out of {gradeModalData.assignment.maxPoints})</label>
+                  <input
+                    type="number"
+                    max={gradeModalData.assignment.maxPoints}
+                    min={0}
+                    required
+                    value={gradeForm.grade}
+                    onChange={(e) => setGradeForm({ ...gradeForm, grade: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs font-bold text-[#002045]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Feedback</label>
+                  <textarea
+                    rows="3"
+                    placeholder="Feedback for student..."
+                    value={gradeForm.feedback}
+                    onChange={(e) => setGradeForm({ ...gradeForm, feedback: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button type="button" onClick={() => setGradeModalData(null)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
+                  <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Save Grade</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* CREATE DISCUSSION MODAL */}
+        {showCreateDiscussion && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
+              <h3 className="text-lg font-bold text-[#002045]">Post Discussion Topic</h3>
+              <form onSubmit={handleCreateDisc} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Topic Title *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Question on Midterm Topic 2"
+                    value={discussionForm.title}
+                    onChange={(e) => setDiscussionForm({ ...discussionForm, title: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e]">Content *</label>
+                  <textarea
+                    rows="4"
+                    required
+                    placeholder="Details of your discussion topic..."
+                    value={discussionForm.content}
+                    onChange={(e) => setDiscussionForm({ ...discussionForm, content: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button type="button" onClick={() => setShowCreateDiscussion(false)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
+                  <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Post Topic</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MARK ATTENDANCE MODAL */}
+        {showMarkAttendance && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-[#dae2fd] space-y-4 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg font-bold text-[#002045]">Mark Attendance</h3>
+              <form onSubmit={handleSaveAttendance} className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#131b2e]">Session Date *</label>
+                    <input
+                      type="date"
+                      required
+                      value={attendanceForm.date}
+                      onChange={(e) => setAttendanceForm({ ...attendanceForm, date: e.target.value })}
+                      className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#131b2e]">Topic</label>
+                    <input
+                      type="text"
+                      value={attendanceForm.topic}
+                      onChange={(e) => setAttendanceForm({ ...attendanceForm, topic: e.target.value })}
+                      className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <label className="block text-xs font-bold text-[#002045]">Student Roster</label>
+                  {attendanceRecords.length === 0 ? (
+                    <p className="text-xs text-[#74777f]">No students enrolled to mark.</p>
+                  ) : (
+                    <div className="divide-y divide-[#f2f3ff] border border-[#dae2fd] rounded-xl p-2 bg-[#faf8ff]">
+                      {attendanceRecords.map((rec, idx) => (
+                        <div key={rec.student} className="py-2 flex items-center justify-between text-xs">
+                          <span className="font-bold text-[#131b2e]">{rec.name}</span>
+                          <div className="flex gap-2">
+                            {["present", "late", "absent"].map((st) => (
+                              <button
+                                key={st}
+                                type="button"
+                                onClick={() => {
+                                  const next = [...attendanceRecords];
+                                  next[idx].status = st;
+                                  setAttendanceRecords(next);
+                                }}
+                                className={`px-2.5 py-1 rounded text-[11px] font-bold capitalize transition ${rec.status === st
+                                    ? st === "present"
+                                      ? "bg-emerald-600 text-white"
+                                      : st === "late"
+                                        ? "bg-amber-500 text-white"
+                                        : "bg-red-600 text-white"
+                                    : "bg-white text-[#74777f] border border-[#c4c6cf]"
+                                  }`}
+                              >
+                                {st}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-[#dae2fd]">
+                  <button type="button" onClick={() => setShowMarkAttendance(false)} className="px-3 py-1.5 text-xs text-[#74777f]">Cancel</button>
+                  <button type="submit" className="px-4 py-1.5 bg-[#002045] text-white font-bold text-xs rounded-lg">Save Record</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* POST ANNOUNCEMENT MODAL */}
+        {showPostAnnouncement && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
+              <div className="flex justify-between items-center border-b border-[#dae2fd] pb-3">
+                <h3 className="text-lg font-bold text-[#002045] flex items-center gap-2">
+                  <span className="material-symbols-outlined text-amber-500">campaign</span>
+                  Broadcast Course Announcement
+                </h3>
+                <button onClick={() => setShowPostAnnouncement(false)} className="text-[#74777f] hover:text-[#002045]">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateAnnouncement} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e] mb-1">Title *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Class Schedule Change & Lecture 5 Slides"
+                    value={announcementForm.title}
+                    onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#002045]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e] mb-1">Content & Details *</label>
+                  <textarea
+                    rows="4"
+                    required
+                    placeholder="Full announcement content for students..."
+                    value={announcementForm.content}
+                    onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })}
+                    className="w-full p-2 border border-[#c4c6cf] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#002045]"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="annIsPinned"
+                    checked={announcementForm.isPinned}
+                    onChange={(e) => setAnnouncementForm({ ...announcementForm, isPinned: e.target.checked })}
+                    className="w-4 h-4 text-[#002045] rounded border-[#c4c6cf]"
+                  />
+                  <label htmlFor="annIsPinned" className="text-xs font-semibold text-[#131b2e]">
+                    Pin this notice to top of Course Overview
+                  </label>
+                </div>
+                <div className="flex justify-end gap-2 pt-3 border-t border-[#dae2fd]">
+                  <button
+                    type="button"
+                    onClick={() => setShowPostAnnouncement(false)}
+                    className="px-4 py-2 text-xs font-semibold text-[#74777f] hover:bg-[#eaedff] rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingAnnouncement}
+                    className="px-5 py-2 text-xs font-bold bg-[#002045] text-white hover:bg-[#1a365d] rounded-lg disabled:opacity-50"
+                  >
+                    {submittingAnnouncement ? "Posting..." : "Broadcast Announcement"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+      </div>
     </DashboardLayout>
   );
 }

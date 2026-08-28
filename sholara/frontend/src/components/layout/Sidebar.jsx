@@ -165,6 +165,13 @@ export function Sidebar({ profile }) {
         />
 
         <SidebarItem
+          icon="domain"
+          text="Dept Channels"
+          href="/department-channels"
+          active={location === "/department-channels"}
+        />
+
+        <SidebarItem
           icon="groups"
           text="Study Groups"
           href="/study-groups"

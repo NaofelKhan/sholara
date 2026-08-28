@@ -16,6 +16,7 @@ import CourseList from "./pages/CourseList";
 import CourseWorkspace from "./pages/CourseWorkspace";
 import StudyGroupList from "./pages/StudyGroupList";
 import StudyGroupWorkspace from "./pages/StudyGroupWorkspace";
+import DepartmentChannels from "./pages/DepartmentChannels";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/courses/:id" component={CourseWorkspace} />
       <Route path="/study-groups" component={StudyGroupList} />
       <Route path="/study-groups/:id" component={StudyGroupWorkspace} />
+      <Route path="/department-channels" component={DepartmentChannels} />
       <Route path="/community" component={StudyGroupList} />
       <Route path="/skill-exchange" component={SkillExchange} />
       <Route path="/offer-skill" component={OfferSkill} />

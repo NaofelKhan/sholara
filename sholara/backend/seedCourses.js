@@ -12,6 +12,7 @@ const CourseMaterial = require("./models/CourseMaterial");
 const CourseAssignment = require("./models/CourseAssignment");
 const CourseDiscussion = require("./models/CourseDiscussion");
 const CourseAttendance = require("./models/CourseAttendance");
+const CourseAnnouncement = require("./models/CourseAnnouncement");
 
 const seedCourses = async () => {
   try {
@@ -54,7 +55,6 @@ const seedCourses = async () => {
 
     // --- 1. CREATE CS COURSE ---
     console.log("Creating CS Course: Data Structures & Algorithms...");
-    // Remove previous demo course if exists
     await Course.deleteMany({ code: "CSE-201" });
 
     const csCourse = await Course.create({
@@ -68,6 +68,25 @@ const seedCourses = async () => {
       enrolledStudents: [student._id],
       coverGradient: "from-[#002045] to-[#1a365d]",
     });
+
+    // Announcements for CS Course
+    await CourseAnnouncement.deleteMany({ course: csCourse._id });
+    await CourseAnnouncement.create([
+      {
+        course: csCourse._id,
+        title: "Midterm Exam Coverage & Practice Problem Set",
+        content: "The upcoming Midterm Examination will cover Arrays, Linked Lists, BSTs, and Graph Traversal. Please review Assignment 1 solution notes before Monday's lecture.",
+        isPinned: true,
+        author: instructor._id,
+      },
+      {
+        course: csCourse._id,
+        title: "Office Hours Rescheduled for Thursday",
+        content: "Due to the Faculty Research Symposium, Office Hours this week are moved to Thursday 3:00 PM - 5:00 PM in Lab 304.",
+        isPinned: false,
+        author: instructor._id,
+      },
+    ]);
 
     // Materials for CS Course
     await CourseMaterial.deleteMany({ course: csCourse._id });
@@ -105,7 +124,7 @@ const seedCourses = async () => {
         course: csCourse._id,
         title: "Assignment 1: Linked List Operations",
         description: "Implement doubly linked list with insertion, deletion, and reverse methods in Java or C++.",
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // in 7 days
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         maxPoints: 100,
         createdBy: instructor._id,
         submissions: [
@@ -184,6 +203,18 @@ const seedCourses = async () => {
       enrolledStudents: [student._id],
       coverGradient: "from-[#003730] to-[#006b5f]",
     });
+
+    // Announcements for EEE Course
+    await CourseAnnouncement.deleteMany({ course: eeeCourse._id });
+    await CourseAnnouncement.create([
+      {
+        course: eeeCourse._id,
+        title: "Lab Safety Gear Requirement for Circuit Hardware Sessions",
+        content: "All students must bring safety goggles and breadboard wire kits for Lab Session 2 starting next Tuesday.",
+        isPinned: true,
+        author: instructor._id,
+      },
+    ]);
 
     // Materials for EEE Course
     await CourseMaterial.deleteMany({ course: eeeCourse._id });
