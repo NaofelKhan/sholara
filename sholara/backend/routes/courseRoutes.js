@@ -24,6 +24,8 @@ const {
   getAnnouncements,
   createAnnouncement,
   deleteAnnouncement,
+  assignTA,
+  removeTA,
 } = require("../controllers/courseController");
 
 // All routes require login authentication
@@ -36,6 +38,10 @@ router.post("/join", joinCourse);
 router.get("/:id", getCourseById);
 router.delete("/:id", deleteCourse);
 router.delete("/:id/members/:studentId", removeMember);
+
+// Teaching Assistants
+router.post("/:id/tas", assignTA);
+router.delete("/:id/tas/:taId", removeTA);
 
 // Course Announcement Board
 router.get("/:id/announcements", getAnnouncements);

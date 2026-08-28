@@ -41,6 +41,12 @@ const courseSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    teachingAssistants: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     coverGradient: {
       type: String,
       default: "from-[#002045] to-[#1a365d]",

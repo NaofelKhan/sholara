@@ -43,6 +43,27 @@ const protect = async (req, res, next) => {
 
 };
 
+const adminOnly = (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    next();
+  } else {
+    return res.status(403).json({ message: "Access denied. Administrator privileges required." });
+  }
+};
+
+const facultyOrTa = (req, res, next) => {
+  if (
+    req.user &&
+    (req.user.role === "faculty" || req.user.role === "teacher" || req.user.role === "ta" || req.user.role === "admin")
+  ) {
+    next();
+  } else {
+    return res.status(403).json({ message: "Access denied. Faculty, TA, or Admin privileges required." });
+  }
+};
+
 module.exports = {
-    protect,
+  protect,
+  adminOnly,
+  facultyOrTa,
 };

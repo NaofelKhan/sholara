@@ -20,11 +20,15 @@ const generateJoinCode = () => {
 exports.getCourses = async (req, res) => {
   try {
     const userId = req.user._id;
-    const courses = await Course.find({
-      $or: [{ instructor: userId }, { enrolledStudents: userId }],
-    })
-      .populate("instructor", "fullName email profilePicture department")
-      .populate("enrolledStudents", "fullName email profilePicture")
+    const isUserAdmin = req.user.role === "admin";
+    const query = isUserAdmin
+      ? {}
+      : { $or: [{ instructor: userId }, { enrolledStudents: userId }, { teachingAssistants: userId }] };
+
+    const courses = await Course.find(query)
+      .populate("instructor", "fullName email profilePicture department role")
+      .populate("teachingAssistants", "fullName email profilePicture studentId department role")
+      .populate("enrolledStudents", "fullName email profilePicture studentId department role")
       .sort({ createdAt: -1 });
 
     res.json(courses);
@@ -36,6 +40,10 @@ exports.getCourses = async (req, res) => {
 // POST /api/courses - Create a new course
 exports.createCourse = async (req, res) => {
   try {
+    if (req.user.role === "student") {
+      return res.status(403).json({ message: "Students cannot create courses. Only Faculty, TAs, and Administrators can create course workspaces." });
+    }
+
     const { title, code, description, department, semester, coverGradient } = req.body;
 
     if (!title || !code) {
@@ -113,6 +121,7 @@ exports.getCourseById = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id)
       .populate("instructor", "fullName email profilePicture department role")
+      .populate("teachingAssistants", "fullName email profilePicture studentId department role")
       .populate("enrolledStudents", "fullName email profilePicture studentId department role");
 
     if (!course) {
@@ -570,5 +579,75 @@ exports.deleteAnnouncement = async (req, res) => {
     res.json({ message: "Announcement deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to delete announcement", error: error.message });
+  }
+};
+
+// POST /api/courses/:id/tas - Assign TA to course
+exports.assignTA = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "TA email is required" });
+    }
+
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Authorization check: instructor or admin
+    if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only the course instructor or an admin can assign TAs." });
+    }
+
+    const taUser = await User.findOne({ email: email.trim() });
+    if (!taUser) {
+      return res.status(404).json({ message: "User with this email not found" });
+    }
+
+    if (taUser.role !== "ta" && taUser.role !== "faculty" && taUser.role !== "teacher" && taUser.role !== "admin") {
+      // Update role to 'ta' if student
+      taUser.role = "ta";
+      await taUser.save();
+    }
+
+    if (course.teachingAssistants.includes(taUser._id)) {
+      return res.status(400).json({ message: "User is already assigned as TA for this course." });
+    }
+
+    course.teachingAssistants.push(taUser._id);
+    await course.save();
+
+    const updatedCourse = await Course.findById(course._id)
+      .populate("instructor", "fullName email profilePicture department role")
+      .populate("teachingAssistants", "fullName email profilePicture studentId department role")
+      .populate("enrolledStudents", "fullName email profilePicture studentId department role");
+
+    res.json(updatedCourse);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to assign TA", error: error.message });
+  }
+};
+
+// DELETE /api/courses/:id/tas/:taId - Remove TA from course
+exports.removeTA = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only course instructor or admin can remove TAs" });
+    }
+
+    course.teachingAssistants = course.teachingAssistants.filter(
+      (id) => id.toString() !== req.params.taId.toString()
+    );
+    await course.save();
+
+    res.json({ message: "Teaching assistant removed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to remove TA", error: error.message });
   }
 };

@@ -1,4 +1,58 @@
 const DepartmentPost = require("../models/DepartmentPost");
+const DepartmentChannel = require("../models/DepartmentChannel");
+
+const DEFAULT_CHANNELS = [
+  { name: "Computer Science & Engineering", description: "Official channel for CSE department news, advisories & opportunities", icon: "terminal" },
+  { name: "Electrical & Electronic Engineering", description: "Official channel for EEE department updates & lab announcements", icon: "bolt" },
+  { name: "Business Administration", description: "Official channel for BBA department career updates & seminars", icon: "business_center" },
+  { name: "Data Science & Artificial Intelligence", description: "Research, Kaggle competitions, and AI department channel", icon: "analytics" },
+];
+
+// GET /api/department-channels/channels - Get all channels
+exports.getChannels = async (req, res) => {
+  try {
+    let channels = await DepartmentChannel.find().sort({ createdAt: 1 });
+
+    if (channels.length === 0) {
+      channels = await DepartmentChannel.insertMany(DEFAULT_CHANNELS);
+    }
+
+    res.json(channels);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch department channels", error: error.message });
+  }
+};
+
+// POST /api/department-channels/channels - Create a new department channel (Faculty & Admin only)
+exports.createChannel = async (req, res) => {
+  try {
+    const isFacultyOrAdmin = req.user.role === "faculty" || req.user.role === "teacher" || req.user.role === "admin";
+    if (!isFacultyOrAdmin) {
+      return res.status(403).json({ message: "Access denied. Only Faculty and Administrators can create new Department Channels." });
+    }
+
+    const { name, description, icon } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Department channel name is required" });
+    }
+
+    const existing = await DepartmentChannel.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, "i") } });
+    if (existing) {
+      return res.status(400).json({ message: "A department channel with this name already exists" });
+    }
+
+    const channel = await DepartmentChannel.create({
+      name: name.trim(),
+      description: description || "",
+      icon: icon || "domain",
+      createdBy: req.user._id,
+    });
+
+    res.status(201).json(channel);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to create department channel", error: error.message });
+  }
+};
 
 // GET /api/department-channels - Fetch department channel posts
 exports.getDepartmentPosts = async (req, res) => {
@@ -27,6 +81,11 @@ exports.getDepartmentPosts = async (req, res) => {
 // POST /api/department-channels - Create new department post
 exports.createDepartmentPost = async (req, res) => {
   try {
+    const isFacultyOrAdmin = req.user.role === "faculty" || req.user.role === "teacher" || req.user.role === "ta" || req.user.role === "admin";
+    if (!isFacultyOrAdmin) {
+      return res.status(403).json({ message: "Access denied. Only Faculty and Department Administrators can create posts or announcements on Department Channels." });
+    }
+
     const { title, content, department, category, isPinned, fileUrl } = req.body;
 
     if (!title || !content) {
@@ -56,6 +115,11 @@ exports.createDepartmentPost = async (req, res) => {
 // PUT /api/department-channels/:id/pin - Toggle pin status
 exports.togglePinPost = async (req, res) => {
   try {
+    const isFacultyOrAdmin = req.user.role === "faculty" || req.user.role === "teacher" || req.user.role === "ta" || req.user.role === "admin";
+    if (!isFacultyOrAdmin) {
+      return res.status(403).json({ message: "Access denied. Only Faculty and Administrators can pin posts." });
+    }
+
     const post = await DepartmentPost.findById(req.params.id);
     if (!post) {
       return res.status(404).json({ message: "Department post not found" });

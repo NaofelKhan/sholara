@@ -1,6 +1,17 @@
 import api from "./auth";
 
-// Department Channels API
+// Department Channels List API
+export const getDepartmentChannels = async () => {
+  const { data } = await api.get("/department-channels/channels");
+  return data;
+};
+
+export const createDepartmentChannel = async (channelData) => {
+  const { data } = await api.post("/department-channels/channels", channelData);
+  return data;
+};
+
+// Department Channels Posts API
 export const getDepartmentPosts = async (department = "All", category = "All") => {
   const { data } = await api.get("/department-channels", {
     params: { department, category },

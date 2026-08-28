@@ -22,6 +22,8 @@ import {
   getAnnouncements,
   createAnnouncement,
   deleteAnnouncement,
+  assignTA,
+  removeTA,
 } from "../api/course";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,6 +46,18 @@ export default function CourseWorkspace() {
   const [gradesData, setGradesData] = useState(null);
 
   const [tabLoading, setTabLoading] = useState(false);
+
+  // Role Checks
+  const isInstructor = course?.instructor?._id === user?._id || course?.instructor === user?._id;
+  const isTA = course?.teachingAssistants?.some((ta) => (ta._id || ta) === user?._id) || user?.role === "ta";
+  const isAdmin = user?.role === "admin";
+  const isFaculty = user?.role === "faculty" || user?.role === "teacher" || isInstructor;
+  const canManageCourseTools = isInstructor || isTA || isAdmin || isFaculty;
+
+  // TA state
+  const [showAssignTA, setShowAssignTA] = useState(false);
+  const [taEmailInput, setTaEmailInput] = useState("");
+  const [submittingTA, setSubmittingTA] = useState(false);
 
   const [showPostAnnouncement, setShowPostAnnouncement] = useState(false);
   const [announcementForm, setAnnouncementForm] = useState({ title: "", content: "", isPinned: false });
@@ -141,9 +155,6 @@ export default function CourseWorkspace() {
       </DashboardLayout>
     );
   }
-
-  const isInstructor =
-    course.instructor?._id === user?._id || course.instructor === user?._id;
 
   const copyJoinCode = () => {
     navigator.clipboard.writeText(course.joinCode);
@@ -321,6 +332,37 @@ export default function CourseWorkspace() {
     }
   };
 
+  const handleAssignTA = async (e) => {
+    e.preventDefault();
+    if (!taEmailInput) return;
+    try {
+      setSubmittingTA(true);
+      const updated = await assignTA(courseId, taEmailInput);
+      setCourse(updated);
+      setTaEmailInput("");
+      setShowAssignTA(false);
+      toast({ title: "TA Assigned", description: "Teaching assistant added to course workspace." });
+    } catch (err) {
+      toast({ title: "Assignment Failed", description: err.response?.data?.message || "Failed to assign TA", variant: "destructive" });
+    } finally {
+      setSubmittingTA(false);
+    }
+  };
+
+  const handleRemoveTA = async (taId) => {
+    if (!window.confirm("Remove TA from course?")) return;
+    try {
+      await removeTA(courseId, taId);
+      setCourse((prev) => ({
+        ...prev,
+        teachingAssistants: prev.teachingAssistants.filter((t) => (t._id || t) !== taId),
+      }));
+      toast({ title: "TA Removed", description: "Teaching assistant removed from course workspace." });
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to remove TA", variant: "destructive" });
+    }
+  };
+
   const tabs = [
     { id: "overview", label: "Overview", icon: "dashboard" },
     { id: "materials", label: "Materials", icon: "folder" },
@@ -393,8 +435,8 @@ export default function CourseWorkspace() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${isActive
-                    ? "bg-[#002045] text-white shadow-sm"
-                    : "text-[#43474e] hover:bg-[#faf8ff] hover:text-[#002045]"
+                  ? "bg-[#002045] text-white shadow-sm"
+                  : "text-[#43474e] hover:bg-[#faf8ff] hover:text-[#002045]"
                   }`}
               >
                 <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
@@ -494,8 +536,8 @@ export default function CourseWorkspace() {
                           <div
                             key={ann._id}
                             className={`p-4 rounded-xl border transition space-y-2 ${ann.isPinned
-                                ? "bg-[#fffdf5] border-amber-300 ring-1 ring-amber-200"
-                                : "bg-[#faf8ff] border-[#dae2fd]"
+                              ? "bg-[#fffdf5] border-amber-300 ring-1 ring-amber-200"
+                              : "bg-[#faf8ff] border-[#dae2fd]"
                               }`}
                           >
                             <div className="flex justify-between items-start gap-2">
@@ -560,6 +602,56 @@ export default function CourseWorkspace() {
                         </span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Teaching Assistants Card */}
+                  <div className="bg-white rounded-2xl border border-[#dae2fd] p-6 shadow-sm space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-sm font-bold text-[#002045] uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-amber-600 text-[18px]">menu_book</span>
+                        Teaching Assistants
+                      </h4>
+                      {(isInstructor || isAdmin) && (
+                        <button
+                          onClick={() => setShowAssignTA(true)}
+                          className="text-xs text-[#002045] font-bold hover:underline flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">person_add</span>
+                          Assign TA
+                        </button>
+                      )}
+                    </div>
+
+                    {(!course.teachingAssistants || course.teachingAssistants.length === 0) ? (
+                      <p className="text-xs text-[#74777f]">No Teaching Assistants assigned yet.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {course.teachingAssistants.map((ta) => (
+                          <div key={ta._id || ta} className="flex items-center justify-between gap-2 p-2 bg-[#faf8ff] rounded-xl border border-[#dae2fd]">
+                            <div className="flex items-center gap-2.5">
+                              <img
+                                src={ta.profilePicture || "https://media.istockphoto.com/id/1288129985/tr/vekt%C3%B6r/bir-ki%C5%9Finin-yer-tutucunun-eksik-g%C3%B6r%C3%BCnt%C3%BCs%C3%BC.jpg"}
+                                alt="TA"
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                              <div>
+                                <p className="text-xs font-bold text-[#131b2e]">{ta.fullName || "Teaching Assistant"}</p>
+                                <p className="text-[10px] text-[#74777f]">{ta.email}</p>
+                              </div>
+                            </div>
+                            {(isInstructor || isAdmin) && (
+                              <button
+                                onClick={() => handleRemoveTA(ta._id || ta)}
+                                className="p-1 text-red-500 hover:bg-red-50 rounded text-xs"
+                                title="Remove TA"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">close</span>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="bg-[#faf8ff] rounded-2xl border border-[#dae2fd] p-5 space-y-3">
@@ -905,10 +997,10 @@ export default function CourseWorkspace() {
                             </div>
                             {!isInstructor && userRecord && (
                               <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${userRecord.status === "present"
-                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                                  : userRecord.status === "late"
-                                    ? "bg-amber-100 text-amber-800 border border-amber-300"
-                                    : "bg-red-100 text-red-800 border border-red-300"
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                : userRecord.status === "late"
+                                  ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                  : "bg-red-100 text-red-800 border border-red-300"
                                 }`}>
                                 Status: {userRecord.status}
                               </span>
@@ -1344,12 +1436,12 @@ export default function CourseWorkspace() {
                                   setAttendanceRecords(next);
                                 }}
                                 className={`px-2.5 py-1 rounded text-[11px] font-bold capitalize transition ${rec.status === st
-                                    ? st === "present"
-                                      ? "bg-emerald-600 text-white"
-                                      : st === "late"
-                                        ? "bg-amber-500 text-white"
-                                        : "bg-red-600 text-white"
-                                    : "bg-white text-[#74777f] border border-[#c4c6cf]"
+                                  ? st === "present"
+                                    ? "bg-emerald-600 text-white"
+                                    : st === "late"
+                                      ? "bg-amber-500 text-white"
+                                      : "bg-red-600 text-white"
+                                  : "bg-white text-[#74777f] border border-[#c4c6cf]"
                                   }`}
                               >
                                 {st}
@@ -1434,6 +1526,59 @@ export default function CourseWorkspace() {
                     className="px-5 py-2 text-xs font-bold bg-[#002045] text-white hover:bg-[#1a365d] rounded-lg disabled:opacity-50"
                   >
                     {submittingAnnouncement ? "Posting..." : "Broadcast Announcement"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ASSIGN TA MODAL */}
+        {showAssignTA && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#dae2fd] space-y-4">
+              <div className="flex justify-between items-center border-b border-[#dae2fd] pb-3">
+                <h3 className="text-lg font-bold text-[#002045] flex items-center gap-2">
+                  <span className="material-symbols-outlined text-amber-600">person_add</span>
+                  Assign Teaching Assistant
+                </h3>
+                <button onClick={() => setShowAssignTA(false)} className="text-[#74777f] hover:text-[#002045]">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleAssignTA} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#131b2e] mb-1">
+                    Teaching Assistant User Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="ta.email@university.edu"
+                    value={taEmailInput}
+                    onChange={(e) => setTaEmailInput(e.target.value)}
+                    className="w-full p-2.5 border border-[#c4c6cf] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#002045]"
+                  />
+                  <p className="text-[11px] text-[#74777f] mt-1">
+                    Enter the email address of the registered user to grant Teaching Assistant privileges for this course.
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-[#dae2fd]">
+                  <button
+                    type="button"
+                    onClick={() => setShowAssignTA(false)}
+                    className="px-4 py-2 text-xs font-semibold text-[#74777f] hover:bg-[#eaedff] rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingTA}
+                    className="px-5 py-2 text-xs font-bold bg-[#002045] text-white hover:bg-[#1a365d] rounded-lg disabled:opacity-50"
+                  >
+                    {submittingTA ? "Assigning..." : "Assign TA"}
                   </button>
                 </div>
               </form>

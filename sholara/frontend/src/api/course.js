@@ -125,3 +125,14 @@ export const getGrades = async (courseId) => {
   const { data } = await api.get(`/courses/${courseId}/grades`);
   return data;
 };
+
+// Teaching Assistants API
+export const assignTA = async (courseId, email) => {
+  const { data } = await api.post(`/courses/${courseId}/tas`, { email });
+  return data;
+};
+
+export const removeTA = async (courseId, taId) => {
+  const { data } = await api.delete(`/courses/${courseId}/tas/${taId}`);
+  return data;
+};

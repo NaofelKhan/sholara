@@ -141,13 +141,15 @@ export default function CourseList() {
               Join with Code
             </button>
 
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-[#62fae3] text-[#003730] hover:bg-[#40ebd3] px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition shadow"
-            >
-              <span className="material-symbols-outlined text-[20px]">add_circle</span>
-              Create Course
-            </button>
+            {(user?.role === "faculty" || user?.role === "teacher" || user?.role === "ta" || user?.role === "admin") && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-[#62fae3] text-[#003730] hover:bg-[#40ebd3] px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition shadow"
+              >
+                <span className="material-symbols-outlined text-[20px]">add_circle</span>
+                Create Course
+              </button>
+            )}
           </div>
         </div>
 
