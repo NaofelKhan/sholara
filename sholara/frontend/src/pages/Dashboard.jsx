@@ -8,19 +8,40 @@ import { Announcements } from "@/components/dashboard/Announcements";
 import { loadDashboard } from "../controllers/DashboardController";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "wouter";
+import { useState, useEffect } from "react";
+import { getRecommendedSkills } from "../api/recommendation";
 
 const {
   academic,
   todayFocus,
   tasks,
   activities,
-  skillMatches,
   calendarEvents,
   announcements,
 } = loadDashboard();
 
 export default function Dashboard() {
   const { user } = useAuth();
+
+  const [skillMatches, setSkillMatches] = useState([]);
+  const [skillMatchesLoading, setSkillMatchesLoading] = useState(true);
+  const [skillMatchesBasedOnActivity, setSkillMatchesBasedOnActivity] = useState(false);
+
+  useEffect(() => {
+    getRecommendedSkills()
+      .then((res) => {
+        const mapped = (res?.skills || []).slice(0, 2).map((skill) => ({
+          id: skill._id,
+          name: skill.mentor?.fullName || "Scholara Mentor",
+          skill: skill.title,
+          avatarUrl: skill.mentor?.profilePicture,
+        }));
+        setSkillMatches(mapped);
+        setSkillMatchesBasedOnActivity(!!res?.basedOnActivity);
+      })
+      .catch(() => setSkillMatches([]))
+      .finally(() => setSkillMatchesLoading(false));
+  }, []);
 
   const profile = {
     fullName: user?.fullName,
@@ -110,7 +131,11 @@ export default function Dashboard() {
           </div>
 
           <div className="col-span-12 lg:col-span-7">
-            <SkillRecommendations matches={skillMatches} />
+            <SkillRecommendations
+            matches={skillMatches}
+            loading={skillMatchesLoading}
+            basedOnActivity={skillMatchesBasedOnActivity}
+            />
           </div>
 
           <div className="col-span-12 lg:col-span-5">

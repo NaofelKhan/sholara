@@ -8,6 +8,7 @@ import HeroBanner from "../components/HeroBanner";
 import CategoryFilters from "../components/CategoryFilters";
 import SkillCard from "../components/SkillCard";
 import ActiveRequests from "../components/ActiveRequests";
+import RecommendedForYou from "../components/RecommendedForYou";
 
 import useSkills from "../hooks/useSkills";
 import C from "../constants/colors";
@@ -90,6 +91,8 @@ export default function SkillExchange() {
               )}
             </div>
           )}
+
+          <RecommendedForYou onSelectSkill={setSelectedSkill} onBookSkill={openBooking} />
 
           <ActiveRequests />
 
