@@ -63,4 +63,15 @@ export const updateProfilePicture = async (file) => {
   return data;
 };
 
+// UPDATE ACADEMIC PROFILE
+export const updateAcademicProfile = async (academicData) => {
+  const { data } = await api.put("/auth/academic-profile", academicData);
+  return data;
+};
+
+export const search = async (query) => {
+  const { data } = await api.get(`/search?q=${query}`);
+  return data;
+};
+
 export default api;

@@ -7,6 +7,7 @@ const {
     loginUser,
     getProfile,
     updateProfilePicture,
+    updateAcademicProfile,
 } = require("../controllers/authController");
 
 const {
@@ -36,5 +37,7 @@ router.put(
     updateProfilePicture
 );
 
+// Update academic profile
+router.put("/academic-profile", protect, updateAcademicProfile);
 
 module.exports = router;

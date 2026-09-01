@@ -18,6 +18,14 @@ export const createMarketplaceSkill = async (formData) => {
 // Get all published marketplace skills
 export const getMarketplaceSkills = async () => {
   const { data } = await api.get("/marketplace-skills");
-
   return data.skills;
+};
+
+// Delete a marketplace skill
+export const deleteMarketplaceSkill = async (skillId) => {
+  const { data } = await api.delete(
+    `/marketplace-skills/${skillId}`
+  );
+
+  return data;
 };

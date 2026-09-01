@@ -43,6 +43,48 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    // Dashboard academic information
+    semester: {
+      type: String,
+      default: "Fall 2024",
+    },
+    gpa: {
+      type: Number,
+      default: 3.8,
+    },
+    completion: {
+      type: Number,
+      default: 65,
+    },
+    creditsCompleted: {
+      type: Number,
+      default: 92,
+    },
+    totalCredits: {
+      type: Number,
+      default: 120,
+    },
+    mentoringHours: {
+      type: Number,
+      default: 24,
+    },
+    rank: {
+      type: String,
+      default: "Top 5%",
+    },
+    lecturesToday: {
+      type: Number,
+      default: 2,
+    },
+    mentoringSessions: {
+      type: Number,
+      default: 1,
+    },
+    focus: {
+      type: String,
+      default: "Coursework",
+    },
   },
   {
     timestamps: true,

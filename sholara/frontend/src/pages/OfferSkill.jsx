@@ -262,10 +262,14 @@ const handleSubmit = async (status) => {
           <div className="form-actions">
             <button
               className="btn-draft"
-              onClick={() => handleSubmit("draft")}
+              onClick={() => {
+                window.scrollTo(0, 0);
+                navigate("/skill-exchange");
+              }}
               disabled={loading}
+              type="button"
             >
-              Save as Draft
+              Cancel
             </button>
 
             <button

@@ -40,7 +40,7 @@ const initialState = {
   estimatedDuration: '',
 };
 
-const SkillRequestForm = ({showToast}) => {
+const SkillRequestForm = ({showToast, onCancel}) => {
   const [form, setForm] = useState(initialState);
   const [loading, setLoading] = useState(false);
   const [actionType, setActionType] = useState(null);
@@ -404,12 +404,10 @@ const submit = async (status) => {
         <button
           type="button"
           className="btn-draft"
-          onClick={() => submit('draft')}
+          onClick={onCancel}
           disabled={loading}
         >
-          {loading && actionType === "draft"
-  ? "Saving..."
-  : "Save as Draft"}
+          Cancel
         </button>
         <button
           type="button"

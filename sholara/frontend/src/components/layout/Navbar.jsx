@@ -3,12 +3,21 @@ import { Link, useLocation } from "wouter";
 import NotificationDropdown from "../notifications/NotificationDropdown";
 import { getUnreadCount } from "../../api/notification";
 import { getUnreadTotal } from "../../api/directMessage";
+import { search as searchApi } from "../../api/auth";
 
 export function Navbar() {
   const [, navigate] = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [unreadMsgs, setUnreadMsgs] = useState(0);
+
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState({
+    users: [],
+    skills: [],
+    requests: [],
+    courses: [],
+  });
 
   const fetchCounts = async () => {
     try {
@@ -34,6 +43,56 @@ export function Navbar() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!search.trim()) {
+        setResults({
+          users: [],
+          skills: [],
+          requests: [],
+          courses: [],
+        });
+        return;
+      }
+
+      try {
+        const data = await searchApi(search);
+        setResults(data || { users: [], skills: [], requests: [], courses: [] });
+      } catch (err) {
+        console.error("Search failed:", err);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const hasResults =
+    (results.skills?.length || 0) > 0 || 
+    (results.requests?.length || 0) > 0 || 
+    (results.courses?.length || 0) > 0;
+
+  const goToSkillExchange = () => {
+    setSearch("");
+    setResults({
+      users: [],
+      skills: [],
+      requests: [],
+      courses: [],
+    });
+    navigate("/skill-exchange");
+  };
+
+  const goToCourse = (courseId) => {
+    setSearch("");
+    setResults({
+      users: [],
+      skills: [],
+      requests: [],
+      courses: [],
+    });
+    navigate(`/courses/${courseId}`);
+  };
+
   return (
     <header className="flex justify-between items-center w-full px-8 py-3 h-16 bg-white border-b border-[#c4c6cf] sticky top-0 z-40">
       <div className="flex items-center gap-8">
@@ -43,10 +102,67 @@ export function Navbar() {
           </span>
           <input
             type="text"
-            placeholder="Search courses, mentors..."
+            placeholder="Search courses, skills..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search"
             className="pl-10 pr-4 py-2 w-64 bg-[#f1f5f9] rounded-lg border-none focus:ring-2 focus:ring-[#002045] outline-none text-sm"
           />
+
+          {search && hasResults && (
+            <div className="absolute top-12 left-0 w-80 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50">
+              {results.courses?.length > 0 && (
+                <>
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50">
+                    Courses
+                  </div>
+                  {results.courses.map((course) => (
+                    <div
+                      key={course._id}
+                      onClick={() => goToCourse(course._id)}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-800"
+                    >
+                      📖 {course.title} <span className="text-xs text-gray-500">({course.code})</span>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {results.skills?.length > 0 && (
+                <>
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50">
+                    Skills
+                  </div>
+                  {results.skills.map((skill) => (
+                    <div
+                      key={skill._id}
+                      onClick={goToSkillExchange}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-800"
+                    >
+                      📚 {skill.title}
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {results.requests?.length > 0 && (
+                <>
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50">
+                    Skill Requests
+                  </div>
+                  {results.requests.map((request) => (
+                    <div
+                      key={request._id}
+                      onClick={goToSkillExchange}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-800"
+                    >
+                      🎯 {request.skillTitle}
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         <nav className="hidden lg:flex gap-6">
@@ -76,12 +192,12 @@ export function Navbar() {
 
       <div className="flex items-center gap-4 relative">
         <Link
-          href="/offer-skill"
-          data-testid="button-create-new"
+          href="/edit-profile"
+          data-testid="button-edit-profile"
           className="bg-[#002045] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-[#1a365d] transition"
         >
-          <span className="material-symbols-outlined text-[20px]">add</span>
-          Offer Skill
+          <span className="material-symbols-outlined text-[20px]">edit</span>
+          Edit Profile
         </Link>
 
         {/* Notifications Button & Dropdown */}

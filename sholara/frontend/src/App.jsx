@@ -20,6 +20,7 @@ import DepartmentChannels from "./pages/DepartmentChannels";
 import AdminDashboard from "./pages/AdminDashboard";
 import DirectMessages from "./pages/DirectMessages";
 import Certificates from "./pages/Certificates";
+import EditProfile from "./pages/EditProfile";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/skill-exchange" component={SkillExchange} />
       <Route path="/offer-skill" component={OfferSkill} />
       <Route path="/request-skill" component={RequestSkillPage} />
+      <Route path="/edit-profile" component={EditProfile} />
       <Route path="/my-sessions" component={MySessions} />
       <Route path="/messages" component={DirectMessages} />
       <Route path="/direct-messages" component={DirectMessages} />

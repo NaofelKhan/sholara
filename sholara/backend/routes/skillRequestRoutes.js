@@ -8,6 +8,7 @@ const {
   updateSkillRequest,
   deleteSkillRequest,
   saveAsDraft,
+  acceptSkillRequest,
 } = require("../controllers/skillRequestController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -20,6 +21,8 @@ router
   .route("/")
   .get(getAllSkillRequests)
   .post(protect, createSkillRequest);
+
+router.put("/:id/accept", protect, acceptSkillRequest);
 
 // Get, Update, Delete a request
 router

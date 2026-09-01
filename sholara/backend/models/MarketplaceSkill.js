@@ -41,6 +41,12 @@ const marketplaceSkillSchema = new mongoose.Schema(
       required: true,
     },
 
+    source: {
+      type: String,
+      enum: ["marketplace", "skill-request"],
+      default: "marketplace",
+    },
+
     difficultyLevel: {
       type: String,
       enum: ["Beginner", "Intermediate", "Advanced"],

@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed:admin": "node seedAdmin.js",
-    "seed:accounts": "node seedAccounts.js"
+    "seed:accounts": "node seedAccounts.js",
+    "seed:dashboard": "node seedDashboard.js"
   },
   "keywords": [],
   "author": "",

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "../context/AuthContext";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import SkillRequestForm from "../components/SkillRequestForm";
@@ -7,7 +8,7 @@ import RequestToast from "../components/requestSkill/RequestToast";
 export default function RequestSkillPage() {
 
   const { user } = useAuth();
-
+  const [, navigate] = useLocation();
   const profile = {
     fullName:user?.fullName,
     profilePicture:user?.profilePicture,
@@ -40,6 +41,12 @@ export default function RequestSkillPage() {
 
         <SkillRequestForm
           showToast={showToast}
+          onCancel={() => {
+            navigate("/skill-exchange");
+            setTimeout(() => {
+              window.scrollTo(0, 0);
+            }, 0);
+          }}
         />
 
       </div>

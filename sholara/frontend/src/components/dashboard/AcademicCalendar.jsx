@@ -1,37 +1,34 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import ScheduleAppointmentModal from "../ScheduleAppointmentModal";
 
-export function AcademicCalendar({ events }) {
+export function AcademicCalendar({ events, facultyMembers = [], onAppointmentBooked }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Mock faculty member for testing
-  const sampleFaculty = {
-    _id: "64f1a2b3c4e5f6a7b8c9d0e1",
-    name: "Dr. Alan Turing",
-    department: "Computer Science",
-  };
+  const faculty = facultyMembers[0] || null;
 
   return (
     <div className="bg-white rounded-xl p-6 border border-[#dae2fd] shadow-sm relative">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-[#131b2e]">Calendar</h2>
-        
-        {/* Added action buttons here */}
+
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            data-testid="button-book-appointment"
-            className="text-xs bg-[#002045] text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-[#1a365d] transition"
-          >
-            + Book Appointment
-          </button>
-          
-          <button 
-            data-testid="button-view-all-calendar" 
+          {faculty && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              data-testid="button-book-appointment"
+              className="text-xs bg-[#002045] text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-[#1a365d] transition"
+            >
+              + Book Appointment
+            </button>
+          )}
+
+          <Link
+            href="/calendar"
+            data-testid="button-view-all-calendar"
             className="text-sm font-semibold text-[#002045] hover:underline"
           >
             View All
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -39,12 +36,8 @@ export function AcademicCalendar({ events }) {
         {events.length === 0 ? (
           <p className="text-sm text-[#74777f]">No upcoming events.</p>
         ) : (
-          events.map((event) => (
-            <div
-              key={event.id}
-              data-testid={`card-event-${event.id}`}
-              className="p-4 bg-[#f2f3ff] rounded-lg hover:bg-[#eaedff] transition-all"
-            >
+          events.slice(0, 4).map((event) => {
+            const inner = (
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#d6e3ff] flex items-center justify-center">
                   <span className="material-symbols-outlined text-[#002045]">event</span>
@@ -54,17 +47,37 @@ export function AcademicCalendar({ events }) {
                   <p className="text-sm text-[#74777f] mt-1">{event.time}</p>
                 </div>
               </div>
-            </div>
-          ))
+            );
+
+            return event.href ? (
+              <Link
+                key={event.id}
+                href={event.href}
+                data-testid={`card-event-${event.id}`}
+                className="p-4 bg-[#f2f3ff] rounded-lg hover:bg-[#eaedff] transition-all block"
+              >
+                {inner}
+              </Link>
+            ) : (
+              <div
+                key={event.id}
+                data-testid={`card-event-${event.id}`}
+                className="p-4 bg-[#f2f3ff] rounded-lg hover:bg-[#eaedff] transition-all"
+              >
+                {inner}
+              </div>
+            );
+          })
         )}
       </div>
 
-      {/* Renders modal when '+ Book Appointment' is clicked */}
-      {isModalOpen && (
+      {isModalOpen && faculty && (
         <ScheduleAppointmentModal
-          faculty={sampleFaculty}
+          faculty={faculty}
           onClose={() => setIsModalOpen(false)}
-          onSuccess={() => alert("Appointment scheduled successfully!")}
+          onSuccess={() => {
+            if (onAppointmentBooked) onAppointmentBooked();
+          }}
         />
       )}
     </div>

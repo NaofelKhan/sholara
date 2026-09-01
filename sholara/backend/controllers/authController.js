@@ -51,6 +51,16 @@ const registerUser = async (req, res) => {
             department: user.department,
             studentId: user.studentId,
             profilePicture: user.profilePicture,
+            semester: user.semester,
+            gpa: user.gpa,
+            completion: user.completion,
+            creditsCompleted: user.creditsCompleted,
+            totalCredits: user.totalCredits,
+            mentoringHours: user.mentoringHours,
+            rank: user.rank,
+            lecturesToday: user.lecturesToday,
+            mentoringSessions: user.mentoringSessions,
+            focus: user.focus,
             token: generateToken(user._id),
         });
 
@@ -91,6 +101,16 @@ const loginUser = async (req, res) => {
             department: user.department,
             studentId: user.studentId,
             profilePicture: user.profilePicture,
+            semester: user.semester,
+            gpa: user.gpa,
+            completion: user.completion,
+            creditsCompleted: user.creditsCompleted,
+            totalCredits: user.totalCredits,
+            mentoringHours: user.mentoringHours,
+            rank: user.rank,
+            lecturesToday: user.lecturesToday,
+            mentoringSessions: user.mentoringSessions,
+            focus: user.focus,
             token: generateToken(user._id),
         });
 
@@ -169,9 +189,65 @@ const updateProfilePicture = async (req, res) => {
 }
 };
 
+// Update Academic Profile
+const updateAcademicProfile = async (req, res) => {
+    try {
+        const {
+            semester,
+            gpa,
+            completion,
+            creditsCompleted,
+            totalCredits,
+            mentoringHours,
+            rank,
+            lecturesToday,
+            mentoringSessions,
+            focus,
+        } = req.body;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                semester,
+                gpa,
+                completion,
+                creditsCompleted,
+                totalCredits,
+                mentoringHours,
+                rank,
+                lecturesToday,
+                mentoringSessions,
+                focus,
+            },
+            {
+                new: true,
+                runValidators: true,
+            }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                message: "User not found",
+            });
+        }
+
+        res.status(200).json({
+            message: "Academic profile updated successfully",
+            user: updatedUser,
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
     getProfile,
     updateProfilePicture,
+    updateAcademicProfile,
 };

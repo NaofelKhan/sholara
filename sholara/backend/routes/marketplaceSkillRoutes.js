@@ -1,23 +1,18 @@
 const express = require("express");
 const router = express.Router();
 
-const { protect } = require("../middleware/authMiddleware");
-const upload = require("../middleware/uploadMiddleware");
-
 const {
   createMarketplaceSkill,
   getMarketplaceSkills,
+  deleteMarketplaceSkill,
 } = require("../controllers/marketplaceSkillController");
 
-// Public
+const { protect } = require("../middleware/authMiddleware");
+
+router.post("/", protect, createMarketplaceSkill);
+
 router.get("/", getMarketplaceSkills);
 
-// Private
-router.post(
-  "/",
-  protect,
-  upload.single("coverImage"),
-  createMarketplaceSkill
-);
+router.delete("/:id", protect, deleteMarketplaceSkill);
 
 module.exports = router;

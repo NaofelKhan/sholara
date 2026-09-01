@@ -1,7 +1,7 @@
 import MI from "./MI";
 import C from "../constants/colors";
 
-export default function SkillDetailsModal({ skill, onClose }) {
+export default function SkillDetailsModal({ skill, onClose, onBook }) {
   if (!skill) return null;
 
   return (
@@ -149,6 +149,7 @@ export default function SkillDetailsModal({ skill, onClose }) {
           </div>
 
         <button
+        onClick={() => onBook(skill)}
         className="mt-8 w-full py-3 rounded-xl font-semibold sticky bottom-0"
         style={{
             background: C.primary,

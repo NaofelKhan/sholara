@@ -1,7 +1,10 @@
 import MI from "./MI";
 import C from "../constants/colors";
+import { useAuth } from "../context/AuthContext";
 
-export default function SkillCard({ skill, onBook }) {
+export default function SkillCard({ skill, onBook, onDelete }) {
+  const { user } = useAuth();
+
   // Support both old template data and new MongoDB data
   const title = skill.title;
 
@@ -10,23 +13,36 @@ export default function SkillCard({ skill, onBook }) {
     skill.image ||
     "https://via.placeholder.com/600x300?text=Skill";
 
-const tutor = skill.mentor
-  ? {
-      avatar:
-        skill.mentor.profilePicture ||
-        "https://via.placeholder.com/40",
+  const tutor = skill.mentor
+    ? {
+        avatar:
+          skill.mentor.profilePicture ||
+          "https://via.placeholder.com/40",
 
-      name: skill.mentor.fullName || "Unknown Mentor",
+        name: skill.mentor.fullName || "Unknown Mentor",
 
-      role: skill.mentorTitle
-        ? `${skill.mentorTitle} • ${skill.mentorRole}`
-        : skill.mentorRole || skill.mentor.department || "Student Mentor",
-    }
-  : skill.tutor || {
-      avatar: "https://via.placeholder.com/40",
-      name: "Unknown Mentor",
-      role: "Student Mentor",
-    };
+        role: skill.mentorTitle
+          ? `${skill.mentorTitle} • ${skill.mentorRole}`
+          : skill.mentorRole ||
+            skill.mentor.department ||
+            "Student Mentor",
+      }
+    : skill.tutor || {
+        avatar: "https://via.placeholder.com/40",
+        name: "Unknown Mentor",
+        role: "Student Mentor",
+      };
+
+  // Check whether the logged-in user is the owner of this skill
+  const mentorId =
+    typeof skill.mentor === "object"
+      ? skill.mentor?._id
+      : skill.mentor;
+
+  const isOwner =
+    user?._id &&
+    mentorId &&
+    String(user._id) === String(mentorId);
 
   const topRated = skill.topRated || false;
 
@@ -34,16 +50,17 @@ const tutor = skill.mentor
   const rating = Number(skill.rating || 5.0);
 
   const isPaid =
-  skill.pricingModel === "Paid" ||
-  skill.pricingModel === "Paid Service";
+    skill.pricingModel === "Paid" ||
+    skill.pricingModel === "Paid Service";
 
-const price = isPaid
-  ? `৳${skill.price || 0}${
-      skill.frequency
-        ? `/${skill.frequency.replace("Per ", "").toLowerCase()}`
-        : ""
-    }`
-  : "FREE";
+  const price = isPaid
+    ? `৳${skill.price || 0}${
+        skill.frequency
+          ? `/${skill.frequency.replace("Per ", "").toLowerCase()}`
+          : ""
+      }`
+    : "FREE";
+
   return (
     <div
       className="rounded-xl overflow-hidden flex flex-col transition-all hover:-translate-y-1 group"
@@ -92,6 +109,7 @@ const price = isPaid
             style={{ color: C.tertiary }}
           >
             <MI name="star" fill={1} size={18} />
+
             <span className="font-bold text-sm">
               {rating.toFixed(1)}
             </span>
@@ -145,7 +163,6 @@ const price = isPaid
           </div>
 
           <button
-        
             className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
             style={{
               background: C.primaryFixed,
@@ -161,10 +178,15 @@ const price = isPaid
             }}
             onClick={(e) => {
               e.stopPropagation();
-              onBook?.(skill);
+
+              if (isOwner) {
+                onDelete?.(skill);
+              } else {
+                onBook?.(skill);
+              }
             }}
           >
-            Book Now
+            {isOwner ? "Delete Skill" : "Book Now"}
           </button>
         </div>
       </div>

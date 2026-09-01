@@ -76,6 +76,7 @@ const getMarketplaceSkills = async (req, res) => {
   try {
     const skills = await MarketplaceSkill.find({
       status: "published",
+      source: { $ne: "skill-request" },
     })
       .populate(
         "mentor",
@@ -98,7 +99,42 @@ const getMarketplaceSkills = async (req, res) => {
   }
 };
 
+const deleteMarketplaceSkill = async (req, res) => {
+  try {
+    const skill = await MarketplaceSkill.findById(req.params.id);
+
+    if (!skill) {
+      return res.status(404).json({
+        success: false,
+        message: "Skill offer not found.",
+      });
+    }
+
+    if (skill.mentor.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only delete your own skill offers.",
+      });
+    }
+
+    await MarketplaceSkill.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Skill offer deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Delete Marketplace Skill Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to delete skill offer.",
+    });
+  }
+};
+
 module.exports = {
   createMarketplaceSkill,
   getMarketplaceSkills,
+  deleteMarketplaceSkill,
 };

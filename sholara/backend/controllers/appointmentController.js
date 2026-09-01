@@ -1,5 +1,6 @@
 const Availability = require('../models/Availability');
 const Appointment = require('../models/Appointment');
+const User = require('../models/User');
 const { notifyUser } = require('../utils/notificationService');
 
 // @desc    Get available time slots for a specific faculty on a given date
@@ -90,11 +91,44 @@ exports.bookAppointment = async (req, res) => {
 exports.getStudentAppointments = async (req, res) => {
   try {
     const appointments = await Appointment.find({ student: req.user.id })
-      .populate('faculty', 'name email department')
+      .populate('faculty', 'fullName email department')
       .sort({ date: 1, startTime: 1 });
 
     res.status(200).json(appointments);
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving appointments', error: error.message });
+  }
+};
+
+// @desc    Appointments where the user is student or faculty
+// @route   GET /api/appointments/mine
+// @access  Private
+exports.getMyAppointments = async (req, res) => {
+  try {
+    const appointments = await Appointment.find({
+      $or: [{ student: req.user.id }, { faculty: req.user.id }],
+    })
+      .populate('faculty', 'fullName email department')
+      .populate('student', 'fullName email department')
+      .sort({ date: 1, startTime: 1 });
+
+    res.status(200).json(appointments);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving appointments', error: error.message });
+  }
+};
+
+// @desc    Faculty/teacher list for booking appointments
+// @route   GET /api/appointments/faculty
+// @access  Private
+exports.listFaculty = async (req, res) => {
+  try {
+    const faculty = await User.find({
+      role: { $in: ['faculty', 'teacher'] },
+    }).select('fullName department role');
+
+    res.status(200).json(faculty);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving faculty', error: error.message });
   }
 };

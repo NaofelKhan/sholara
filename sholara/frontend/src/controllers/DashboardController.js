@@ -1,5 +1,5 @@
-import { getDashboardData } from "../services/DashboardService";
+import { getDashboard } from "../api/dashboard";
 
-export function loadDashboard() {
-    return getDashboardData();
+export async function loadDashboard() {
+  return getDashboard();
 }
