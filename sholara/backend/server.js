@@ -32,6 +32,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const certificateRoutes = require("./routes/certificateRoutes");
 const directMessageRoutes = require("./routes/directMessageRoutes");
+const noticeRoutes = require("./routes/noticeRoutes");
 
 console.log("Cloudinary SDK Config:");
 console.log(cloudinary.config());
@@ -80,7 +81,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/certificates", certificateRoutes);
 app.use("/api/messages", directMessageRoutes);
-
+app.use("/api/notices", noticeRoutes);
 
 app.get("/", (req, res) => {
     res.send("Scholara Backend Running");
