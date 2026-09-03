@@ -132,3 +132,73 @@ exports.listFaculty = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving faculty', error: error.message });
   }
 };
+
+// @desc    Create an availability slot for the logged-in faculty/TA member
+// @route   POST /api/appointments/availability
+// @access  Private (Faculty/TA)
+exports.createAvailability = async (req, res) => {
+  try {
+    const { date, startTime, endTime } = req.body;
+
+    if (!date || !startTime || !endTime) {
+      return res.status(400).json({ message: 'Date, start time, and end time are required.' });
+    }
+
+    if (startTime >= endTime) {
+      return res.status(400).json({ message: 'End time must be after start time.' });
+    }
+
+    const existing = await Availability.findOne({
+      faculty: req.user.id,
+      date,
+      startTime,
+    });
+    if (existing) {
+      return res.status(400).json({ message: 'You already have a slot starting at this time on this date.' });
+    }
+
+    const slot = await Availability.create({
+      faculty: req.user.id,
+      date,
+      startTime,
+      endTime,
+    });
+
+    res.status(201).json(slot);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating availability slot', error: error.message });
+  }
+};
+
+// @desc    Get the logged-in faculty/TA member's own availability slots
+// @route   GET /api/appointments/availability/mine
+// @access  Private (Faculty/TA)
+exports.getMyAvailability = async (req, res) => {
+  try {
+    const slots = await Availability.find({ faculty: req.user.id }).sort({ date: 1, startTime: 1 });
+    res.status(200).json(slots);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving availability', error: error.message });
+  }
+};
+
+// @desc    Delete an open (unbooked) availability slot
+// @route   DELETE /api/appointments/availability/:id
+// @access  Private (Faculty/TA)
+exports.deleteAvailability = async (req, res) => {
+  try {
+    const slot = await Availability.findOne({ _id: req.params.id, faculty: req.user.id });
+
+    if (!slot) {
+      return res.status(404).json({ message: 'Slot not found.' });
+    }
+    if (slot.isBooked) {
+      return res.status(400).json({ message: 'Cannot delete a slot that has already been booked.' });
+    }
+
+    await Availability.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: 'Slot deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting availability slot', error: error.message });
+  }
+};

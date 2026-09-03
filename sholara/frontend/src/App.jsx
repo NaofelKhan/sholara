@@ -11,6 +11,7 @@ import OfferSkill from "./pages/OfferSkill";
 import MySessions from "./pages/MySessions";
 import NoticeBoard from "./pages/NoticeBoard";
 import Calendar from "./pages/Calendar";
+import ManageAvailability from "./pages/ManageAvailability";
 import RequestSkillPage from "./pages/RequestSkillPage";
 import CourseList from "./pages/CourseList";
 import CourseWorkspace from "./pages/CourseWorkspace";
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/direct-messages" component={DirectMessages} />
       <Route path="/certificates" component={Certificates} />
       <Route path="/calendar" component={Calendar} />
+      <Route path="/my-availability" component={ManageAvailability} />
       <Route path="/notice-board" component={NoticeBoard} />
       <Route path="/academic-hub" component={CourseList} />
       <Route component={NotFound} />

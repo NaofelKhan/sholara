@@ -243,6 +243,17 @@ export function Sidebar({ profile }) {
             onClick={() => setIsOpen(false)}
           />
 
+                    {/* Faculty/TA Availability Management */}
+          {["faculty", "teacher", "ta"].includes((profile?.role || "").toLowerCase()) && (
+            <SidebarItem
+              icon="event_available"
+              text="My Availability"
+              href="/my-availability"
+              active={location === "/my-availability"}
+              onClick={() => setIsOpen(false)}
+            />
+          )}
+
           {/* Admin Control Panel Route */}
           {profile?.role === "admin" && (
             <SidebarItem
