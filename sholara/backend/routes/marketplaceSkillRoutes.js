@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -8,8 +9,14 @@ const {
 } = require("../controllers/marketplaceSkillController");
 
 const { protect } = require("../middleware/authMiddleware");
+const upload = require("../middleware/uploadMiddleware");
 
-router.post("/", protect, createMarketplaceSkill);
+router.post(
+  "/",
+  protect,
+  upload.single("coverImage"),
+  createMarketplaceSkill
+);
 
 router.get("/", getMarketplaceSkills);
 
